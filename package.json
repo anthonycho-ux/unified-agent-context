@@ -1,13 +1,13 @@
 {
   "name": "unified-agent-context",
   "version": "0.1.0",
-  "description": "",
+  "description": "Shared local context and memory for multiple AI coding agents.",
   "main": "index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test 'tests/*.test.mjs'"
   },
   "keywords": [],
   "author": "",
