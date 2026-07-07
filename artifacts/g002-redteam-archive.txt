@@ -1,0 +1,5 @@
+== G002 archive red-team 2026-07-07T10:36:19.374Z ==
+PASS: redacted 플래그 true
+PASS: 파일 바이트에 원문 secret 부재
+PASS: REDACTED 마커 존재
+archive path: /Users/<mac-user>/unified-agent-context/data/archive/project--arch/archive.jsonl

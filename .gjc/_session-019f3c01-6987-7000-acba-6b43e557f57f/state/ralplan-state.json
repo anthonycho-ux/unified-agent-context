@@ -1,0 +1,26 @@
+{
+  "run_id": "019f3c01-6987-7000-acba-6b43e557f57f",
+  "skill": "ralplan",
+  "active": true,
+  "current_phase": "architect",
+  "version": 2,
+  "updated_at": "2026-07-07T09:59:49.370Z",
+  "receipt": {
+    "version": 1,
+    "skill": "ralplan",
+    "owner": "gjc-runtime",
+    "command": "gjc ralplan persist-run-id",
+    "state_path": "/Users/<mac-user>/unified-agent-context/.gjc/state/sessions/019f3c01-6987-7000-acba-6b43e557f57f/skill-active-state.json",
+    "storage_path": "/Users/<mac-user>/unified-agent-context/.gjc/state/sessions/019f3c01-6987-7000-acba-6b43e557f57f/ralplan-state.json",
+    "mutated_at": "2026-07-07T09:59:49.370Z",
+    "fresh_until": "2026-07-07T10:29:49.370Z",
+    "status": "fresh",
+    "mutation_id": "ralplan:2026-07-07T09:59:49.370Z",
+    "content_sha256": {
+      "algorithm": "sha256",
+      "value": "0b49e502564fb6eec3f5b4eb22a4b9f130081c144f60d18928a5e9b8d51392a8",
+      "covered_path": "/Users/<mac-user>/unified-agent-context/.gjc/_session-019f3c01-6987-7000-acba-6b43e557f57f/state/ralplan-state.json",
+      "computed_at": "2026-07-07T09:59:49.371Z"
+    }
+  }
+}
