@@ -69,7 +69,7 @@ Phase 1 검증에서 `project:alpha` 형식의 콜론 포함 채널이 실제 �
      -> cold_archive 경로로 append
 ```
 
-원칙은 fail-closed다. 일반 저장 경로는 비밀 탐지 시 `SecretBlockedError`로 거부한다. 아카이브 적재만 예외적으로 원문 대신 redacted-only 레코드를 저장한다.
+원칙은 fail-closed다. 집행 방식은 경로별로 두 가지로 나뉜다: **경로 1/3/4 (distilled_fact, explicit_write, auto_distill)는 차단형** — 비밀 탐지 시 `SecretBlockedError`로 저장 자체를 거부한다. **경로 2/5 (cold_archive, archive_ingest)는 redact형** — 원문을 버리고 redacted-only 레코드만 보존한다. 어느 경우에도 원문 비밀이 디스크에 도달하는 일은 없다. `assertSafe()`의 경로 라벨 allowlist는 5개 라벨 전부를 수용하며(게이트 단위 테스트가 5라벨 × 대표 패턴을 검증), 런타임 배선은 위 경로별 집행 방식을 따른다. explicit_write/auto_distill의 실제 배선은 Phase 3에서 이루어진다.
 
 ## 상시 구동 아키텍처
 

@@ -10,63 +10,8 @@ const srcDir = path.join(repoRoot, 'src');
 const archiveDir = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-archive-data-'));
 process.env.UAC_ARCHIVE_DIR = archiveDir;
 
-async function exists(file) {
-  try {
-    await fs.access(file);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function stubGateSource() {
-  return `
-const RULES = [
-  ['api_key', /api[_-]?key\s*[:=]\s*[^\s]+/ig],
-  ['token', /token\s*[:=]\s*[^\s]+/ig],
-  ['sk_key', /sk-[A-Za-z0-9_-]{20,}/g],
-];
-export class SecretBlockedError extends Error {
-  constructor(patterns) { super('Secret blocked'); this.name = 'SecretBlockedError'; this.patterns = patterns; }
-}
-export function scanSecrets(text) {
-  const patterns = [];
-  for (const [name, re] of RULES) {
-    re.lastIndex = 0;
-    if (re.test(String(text))) patterns.push(name);
-  }
-  return { found: patterns.length > 0, patterns };
-}
-export function redactSecrets(text) {
-  let out = String(text);
-  for (const [name, re] of RULES) out = out.replace(re, '[REDACTED:' + name + ']');
-  return out;
-}
-export function assertSafe(text) {
-  const scan = scanSecrets(text);
-  if (scan.found) throw new SecretBlockedError(scan.patterns);
-}
-`;
-}
-
-async function importArchive() {
-  const gatePath = path.join(srcDir, 'secret-gate.mjs');
-
-  if (await exists(gatePath)) {
-    return import(`${pathToFileURL(path.join(srcDir, 'archive.mjs')).href}?t=${Date.now()}-${Math.random()}`);
-  }
-
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-archive-module-'));
-  const tempSrc = path.join(tempRoot, 'src');
-  await fs.mkdir(tempSrc, { recursive: true });
-  await fs.writeFile(path.join(tempSrc, 'archive.mjs'), await fs.readFile(path.join(srcDir, 'archive.mjs'), 'utf8'));
-  await fs.writeFile(path.join(tempSrc, 'config.mjs'), `export * from ${JSON.stringify(`${pathToFileURL(path.join(srcDir, 'config.mjs')).href}?t=${Date.now()}-${Math.random()}`)};\n`);
-  await fs.writeFile(path.join(tempSrc, 'secret-gate.mjs'), stubGateSource());
-
-  return import(pathToFileURL(path.join(tempSrc, 'archive.mjs')).href);
-}
-
-const { archiveConversation } = await importArchive();
+// Real modules only — no stub fallback. If src files are missing, tests must fail loudly.
+const { archiveConversation } = await import(pathToFileURL(path.join(srcDir, 'archive.mjs')).href);
 
 test.after(async () => {
   await fs.rm(archiveDir, { recursive: true, force: true });
