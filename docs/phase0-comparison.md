@@ -21,8 +21,9 @@
 
 - `server-memory`: WRITE→SEARCH 왕복 성공 (`Phase0SpikeDecision` 저장·검색 일치)
 - `memory-keeper`: WRITE→GET 왕복 성공, **크로스 프로세스 GET 성공**, **channel 필터 서버측 집행 확인**, `context_search_all`로 세션 횡단 검색 성공
-- `mem0-mcp`: 올바른 스키마(kind/scope/provenance)로 재시도해도 store가 `fetch failed` (Ollama 부재) — 임베딩이 하드 의존
+- `mem0-mcp`: 올바른 스키마(kind/scope{workspace,project}/provenance{checkpointId})로 호출해도 store가 `fetch failed` (Ollama 부재) — 임베딩이 하드 의존. roundtrip.mjs는 설치본 0.2.0 스키마와 일치하도록 수정됨
 - `openmemory`: add "Memory added successfully" 후 search 0건 — API 키 없는 클라우드 사일런트 실패, v1 로컬 전용 제약 위반
+- 전 후보(4종) 재현 로그: `artifacts/g001-roundtrip-all.txt` — 동일 스크립트로 일괄 재실행한 원시 transcript
 
 ## 채택 결정
 

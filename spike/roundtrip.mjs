@@ -17,8 +17,9 @@ const candidates = {
     command: "node",
     args: ["node_modules/mem0-mcp/dist/bin/mem0-mcp.js"],
     env: { MEM0_STORE_PATH: process.cwd() + "/data/mem0" },
-    write: () => ({ name: "memory_store", args: { content: "PHASE0_SPIKE decision: DB는 Postgres로 전환", workspace: "global", project: "spike", checkpoint: "phase0" } }),
-    search: () => ({ name: "memory_search", args: { query: "PHASE0_SPIKE decision", workspace: "global", project: "spike" } }),
+    // Schema per installed mem0-mcp 0.2.0: kind + scope{workspace,project} + provenance{checkpointId} are required.
+    write: () => ({ name: "memory_store", args: { kind: "decision", content: "PHASE0_SPIKE decision: DB는 Postgres로 전환", scope: { workspace: "global", project: "spike" }, provenance: { checkpointId: "phase0-spike" } } }),
+    search: () => ({ name: "memory_search", args: { query: "PHASE0_SPIKE decision", scope: { workspace: "global", project: "spike" } } }),
     health: () => ({ name: "health", args: {} }),
   },
   "server-memory": {
