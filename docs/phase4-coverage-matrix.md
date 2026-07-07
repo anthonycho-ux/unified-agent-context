@@ -10,8 +10,9 @@
 | 계층 | 의미 | 커버 |
 |------|------|------|
 | **라이브 (실 LLM 세션)** | 실제 하네스 에이전트 세션이 기록/인지 | gajaecode source (record-fact 실행, 스토어 기계 확인) + gajaecode sink (새 `gjc -p` 세션이 rule pull로 Phase 0 결정 정확 인지) |
-| **메커니즘 (실 배선 실행)** | 각 하네스의 실제 기록/주입 경로(등록된 MCP 서버, 훅 커맨드, 훅 스크립트)를 실행 파일 그대로 구동 | 아래 매트릭스 20행 전부 |
+| **메커니즘 (실 배선 실행)** | 각 하네스의 실제 기록/주입 경로 실행: record-fact/inject-context/hermes 훅 스크립트는 실행 파일 그대로, MCP 표기 행은 **실제 MCP 프로토콜 왕복** — `ContextStore`가 `StdioClientTransport`로 하네스들이 등록한 것과 동일한 `mcp-memory-keeper` 서버 바이너리를 spawn해 `context_save`/`context_get` 도구를 호출한다 (`src/store-adapter.mjs`). 단, **각 하네스 자체 MCP 클라이언트 런타임**(claude/codex/hermes 내장 MCP 계층) 경유 호출은 라이브 보류 항목 | 아래 매트릭스 20행 전부 |
 | **라이브 보류 (외부 의존)** | codex/hermes: openai-codex 사용량 한도 (Jul 9 재개) · claude: CLI 로그인 필요 · lettacode: 미설치 | 해소 시 `scripts/cross-verify.mjs` 재실행 + 해당 하네스 라이브 세션 1회씩 |
+| **동어반복 한계 (고지)** | 완전 에뮬레이션 쌍(예: claude→codex)은 '기대 사실을 쓰고 같은 공유 스토어에서 읽는' 구조라 스토어 왕복 검증에 가깝다. 실행파일 경로 행은 독립 프로세스가 공유 스토어를 판독하므로 실질 검증이며, 에뮬레이션 쌍의 남은 간극은 위 라이브 보류 항목 해소로 닫힌다 | 해당 smoke 행 |
 
 라이브 격리 프로브(타 프로젝트 cwd에서 프로젝트 결정 미노출 확인)는 모델 안전필터 오탐으로 차단되어 기계 검증(스위트 65/65의 스코프 격리 테스트 + red-team scope 공격 PASS)으로 대체함.
 
