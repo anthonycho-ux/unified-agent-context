@@ -4,6 +4,9 @@
 # stdin: hermes JSON payload / stdout: {"context": "..."} 또는 없음.
 set -euo pipefail
 
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+
 PAYLOAD=$(cat -)
 IS_FIRST=$(printf '%s' "$PAYLOAD" | python3 -c 'import json,sys
 try:
@@ -16,7 +19,7 @@ if [ "$IS_FIRST" != "1" ]; then
   exit 0
 fi
 
-BLOCK=$(node /Users/<mac-user>/unified-agent-context/scripts/inject-context.mjs 2>/dev/null || true)
+BLOCK=$(node "$REPO_ROOT/scripts/inject-context.mjs" 2>/dev/null || true)
 if [ -n "$BLOCK" ]; then
   printf '%s' "$BLOCK" | python3 -c 'import json,sys; print(json.dumps({"context": sys.stdin.read()}))'
 fi

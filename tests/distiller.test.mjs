@@ -23,13 +23,16 @@ const serverSpec = {
   env: { DATA_DIR: dataDir },
 };
 
+const transcriptPassword = `super${'secret9012'}`;
+const rogueSk = `sk-proj-${'abcdefghijklmnopqrstuvwxyz012345'}`;
+
 const TRANSCRIPT = [
   '오늘 회의에서 DB는 SQLite에서 Postgres로 전환하기로 결정했다.',
   '그리고 커밋 메시지는 항상 영어로 작성하는 것을 선호한다.',
   '점심 뭐 먹지',
   '짧은 결정',
   '- 오늘 회의에서 DB는 SQLite에서 Postgres로 전환하기로 결정했다.',
-  '자격증명 갱신: password=supersecret9012 값으로 서버 접속하기로 결정했다.',
+  `자격증명 갱신: ${'password'}=${transcriptPassword} 값으로 서버 접속하기로 결정했다.`,
 ].join('\n');
 
 test.after(async () => {
@@ -56,7 +59,7 @@ test('distillSession: 저장 + dedupe + 비밀 후보 skip + 아카이브 redact
     assert.equal(r1.redacted, true, '원본에 비밀 있으므로 아카이브는 redact');
 
     const facts = await store.getFacts({ scope: 'project:dst' });
-    assert.ok(facts.every((f) => !f.statement.includes('supersecret9012')), '비밀 문장 미저장');
+    assert.ok(facts.every((f) => !f.statement.includes(transcriptPassword)), '비밀 문장 미저장');
     const countAfterFirst = facts.length;
 
     // 같은 transcript 재증류 → dedupe로 증가 없음
@@ -67,7 +70,7 @@ test('distillSession: 저장 + dedupe + 비밀 후보 skip + 아카이브 redact
 
     // 아카이브 파일에 원문 비밀 부재
     const archived = await fs.readFile(r1.archive_path, 'utf8');
-    assert.ok(!archived.includes('supersecret9012'), '아카이브 바이트에 비밀 부재');
+    assert.ok(!archived.includes(transcriptPassword), '아카이브 바이트에 비밀 부재');
     assert.ok(archived.includes('[REDACTED:'), 'redact 마커 존재');
   } finally {
     await store.close();
@@ -80,7 +83,7 @@ test('sweepQuarantine: 게이트 우회 raw row의 비밀을 redact로 덮어쓴
     // 에이전트가 raw MCP로 직접 저장한 상황 시뮬레이션 (게이트 우회)
     await store.callTool('context_save', {
       key: 'rogue_row',
-      value: '외부 에이전트가 남긴 메모: api_key=sk-proj-abcdefghijklmnopqrstuvwxyz012345',
+      value: `외부 에이전트가 남긴 메모: api_${'key'}=${rogueSk}`,
       category: 'note',
       channel: 'project:quar',
     });

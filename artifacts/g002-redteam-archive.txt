@@ -2,4 +2,4 @@
 PASS: redacted 플래그 true
 PASS: 파일 바이트에 원문 secret 부재
 PASS: REDACTED 마커 존재
-archive path: /Users/<mac-user>/unified-agent-context/data/archive/project--arch/archive.jsonl
+archive path: <repo>/data/archive/project--arch/archive.jsonl

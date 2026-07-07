@@ -12,7 +12,7 @@ ROUNDTRIP_DONE:memory-keeper
 
 ===== CANDIDATE: mem0-mcp (2026-07-07T10:00:56Z) =====
 TOOLS: ["health","memory_store","memory_recall","memory_search","memory_update","memory_forget","setup_wizard"]
-HEALTH: [{"type":"text","text":"{\n  \"ok\": false,\n  \"storePath\": \"/Users/<mac-user>/unified-agent-context/spike/data/mem0\",\n  \"ollamaBaseUrl\": \"http://127.0.0.1:11434\",\n  \"embedModel\": \"qwen3-embedding:latest\",\n  \"modelAvailable\": false,\n  \"recordCount\": 0,\n  \"details\": \"fetch failed\"\n}"}]
+HEALTH: [{"type":"text","text":"{\n  \"ok\": false,\n  \"storePath\": \"<repo>/spike/data/mem0\",\n  \"ollamaBaseUrl\": \"http://127.0.0.1:11434\",\n  \"embedModel\": \"qwen3-embedding:latest\",\n  \"modelAvailable\": false,\n  \"recordCount\": 0,\n  \"details\": \"fetch failed\"\n}"}]
 WRITE(memory_store): [{"type":"text","text":"{\n  \"error\": \"fetch failed\"\n}"}] isError=true
 SEARCH(memory_search): [{"type":"text","text":"{\n  \"results\": []\n}"}] isError=false
 ROUNDTRIP_DONE:mem0-mcp

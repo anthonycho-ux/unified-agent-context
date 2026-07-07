@@ -5,5 +5,5 @@
  "command": "node roundtrip.mjs {server-memory,memory-keeper,mem0-mcp,openmemory} (cwd=spike)",
  "verdict": "passed",
  "summary": "4 candidates executed; memory-keeper WRITE->GET consistent; transcript at artifacts/g001-roundtrip-all.txt",
- "transcriptPath": "/Users/<mac-user>/unified-agent-context/artifacts/g001-roundtrip-all.txt"
+ "transcriptPath": "<repo>/artifacts/g001-roundtrip-all.txt"
 }

@@ -4,10 +4,10 @@
 
 ## 0. 공통 정보
 
-- 공유 메모리 서버(스토어): `node /Users/<mac-user>/unified-agent-context/node_modules/mcp-memory-keeper/dist/index.js`
-- 필수 환경변수: `DATA_DIR=/Users/<mac-user>/unified-agent-context/data/memory`
-- 주입 커맨드: `node /Users/<mac-user>/unified-agent-context/scripts/inject-context.mjs [--cwd <dir>]`
-- 명시 기록: `node /Users/<mac-user>/unified-agent-context/scripts/record-fact.mjs --type decision|preference "<문장>"`
+- 공유 메모리 서버(스토어): `node <repo>/node_modules/mcp-memory-keeper/dist/index.js`
+- 필수 환경변수: `DATA_DIR=<repo>/data/memory`
+- 주입 커맨드: `node <repo>/scripts/inject-context.mjs [--cwd <dir>]`
+- 명시 기록: `node <repo>/scripts/record-fact.mjs --type decision|preference "<문장>"`
 - 스코프 규약: 전역 선호 = channel `global`, 프로젝트 결정 = channel `project:<git-root-basename>`
 - 금지: API 키/토큰/자격증명을 공유 메모리에 저장하지 않는다 (게이트가 차단하지만 원칙으로도 금지)
 
@@ -45,12 +45,15 @@
 ## 4. 합류 검증 (2분)
 
 ```sh
+# 먼저 <repo>를 실제 checkout 경로로 바꾼다.
+export UAC_HOME="$PWD"
+
 # (a) 주입 확인 — 전역 선호가 보이면 성공
-node /Users/<mac-user>/unified-agent-context/scripts/inject-context.mjs --cwd <아무 프로젝트>
+node "$UAC_HOME/scripts/inject-context.mjs" --cwd <아무 프로젝트>
 # (b) 기록 왕복 — RECORDED 출력 확인 후 (a) 재실행 시 새 사실 포함
-node /Users/<mac-user>/unified-agent-context/scripts/record-fact.mjs --type decision --scope project:onboard-test "온보딩 검증 결정"
+node "$UAC_HOME/scripts/record-fact.mjs" --type decision --scope project:onboard-test "온보딩 검증 결정"
 # (c) 배선 자가진단
-node /Users/<mac-user>/unified-agent-context/scripts/doctor.mjs
+node "$UAC_HOME/scripts/doctor.mjs"
 ```
 
 ## 5. 재설명 계측 (2주 관문 보조지표)
@@ -58,8 +61,8 @@ node /Users/<mac-user>/unified-agent-context/scripts/doctor.mjs
 에이전트에게 뭔가를 "다시 설명"하게 됐다면 그 순간 기록한다:
 
 ```sh
-node /Users/<mac-user>/unified-agent-context/scripts/reexplain.mjs log "<무엇을 재설명했나>" [--agent <이름>]
-node /Users/<mac-user>/unified-agent-context/scripts/reexplain.mjs report   # 주간 추이
+node "$UAC_HOME/scripts/reexplain.mjs" log "<무엇을 재설명했나>" [--agent <이름>]
+node "$UAC_HOME/scripts/reexplain.mjs" report   # 주간 추이
 ```
 
 2주 실사용 후 report의 주간 건수가 0에 수렴하고 체감상 재설명이 사라졌으면 v1 최종 합격.
