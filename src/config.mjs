@@ -29,6 +29,7 @@ export function resolveProjectId(cwd = process.cwd()) {
 
 export const SERVER_SPEC = {
   command: 'node',
-  args: [path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js')],
+  // UAC_SERVER_ENTRY: 테스트/교체용 서버 엔트리 오버라이드 (MCP 표준 스폰 스펙만 노출 — P3 결합 금지 유지).
+  args: [process.env.UAC_SERVER_ENTRY ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js')],
   env: { DATA_DIR },
 };
