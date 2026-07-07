@@ -3,7 +3,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 import { SERVER_SPEC } from './config.mjs';
 import { validateFact } from './schema.mjs';
-import { assertSafe } from './secret-gate.mjs';
+import { assertSafe, scanSecrets } from './secret-gate.mjs';
 
 const TOOL_SAVE = 'context_save';
 const TOOL_GET = 'context_get';
@@ -150,6 +150,42 @@ export class ContextStore {
     });
 
     return factsFromItems(parseItems(result));
+  }
+
+  /**
+   * 채널의 raw row를 그대로 반환한다 (검역 스윕용).
+   * DistilledFact 파싱/검증 없이 {key, value, category} 수준으로 노출.
+   */
+  async getRawItems({ scope } = {}) {
+    const result = await this.callTool(TOOL_GET, {
+      channel: normalizeScope(scope),
+      includeMetadata: true,
+      limit: 100,
+    });
+
+    return parseItems(result).map((item) => ({
+      key: item.key,
+      value: item.value,
+      category: item.category,
+      channel: item.channel,
+    }));
+  }
+
+  /**
+   * raw row를 동일 key로 덮어쓴다 (검역 스윕의 redact 재저장 전용).
+   * 비밀 게이트를 우회하지 않도록 저장 전 scanSecrets 재검사로 fail-closed 보장.
+   */
+  async overwriteRaw({ key, value, scope, category }) {
+    const scan = scanSecrets(value);
+    if (scan.found) {
+      throw new Error(`overwriteRaw rejected: value still contains secrets (${scan.patterns.join(',')})`);
+    }
+    await this.callTool(TOOL_SAVE, {
+      key,
+      value,
+      category,
+      channel: normalizeScope(scope),
+    });
   }
 
   async close() {
