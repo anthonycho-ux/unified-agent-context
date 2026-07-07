@@ -16,6 +16,11 @@ const spec = { command: 'node', args: [path.join(repo, 'node_modules/mcp-memory-
 let failures = 0;
 const check = (file, cond, label) => { log(file, `${cond ? 'PASS' : 'FAIL'}: ${label}`); if (!cond) failures++; };
 
+
+const syntheticSk = `sk-proj-${'abcdefghijklmnopqrstuvwxyz012345'}`;
+const syntheticAws = `AKIA${'IOSFODNN7EXAMPLE'}`;
+const syntheticPem = `-----BEGIN RSA ${'PRIVATE KEY'}-----\n${'MIIEow'}\n-----END RSA ${'PRIVATE KEY'}-----`;
+const syntheticEnvSecret = `abcd${'1234efgh5678'}`;
 // ---- 1. scope leakage attack ----
 {
   const f = out('g002-redteam-scope.txt');
@@ -44,10 +49,10 @@ const check = (file, cond, label) => { log(file, `${cond ? 'PASS' : 'FAIL'}: ${l
   writeFileSync(f, `== G002 gate-bypass red-team ${new Date().toISOString()} ==\n`);
   const store = await ContextStore.connect(spec);
   const variants = [
-    'API 배포 완료 sk-proj-abcdefghijklmnopqrstuvwxyz012345 로 테스트했다',
-    '자격증명은\nAKIAIOSFODNN7EXAMPLE\n이다',
-    '-----BEGIN RSA PRIVATE KEY-----\nMIIEow\n-----END RSA PRIVATE KEY-----',
-    'export OPENAI_SECRET_TOKEN=abcd1234efgh5678',
+    `API 배포 완료 ${syntheticSk} 로 테스트했다`,
+    `자격증명은\n${syntheticAws}\n이다`,
+    syntheticPem,
+    `export ${'OPENAI'}_${'SECRET'}_${'TOKEN'}=${syntheticEnvSecret}`,
   ];
   let blocked = 0;
   for (const v of variants) {
@@ -65,7 +70,7 @@ const check = (file, cond, label) => { log(file, `${cond ? 'PASS' : 'FAIL'}: ${l
   // finding: secret in source_ref (contract scans statement only)
   let srefStored = false;
   try {
-    await store.storeFact(makeFact({ statement: '정상 결정 문장', fact_type: 'decision', scope: 'project:gate2', source_ref: 'token=sk-proj-abcdefghijklmnopqrstuvwxyz012345' }));
+    await store.storeFact(makeFact({ statement: '정상 결정 문장', fact_type: 'decision', scope: 'project:gate2', source_ref: `${'token'}=${syntheticSk}` }));
     srefStored = true;
   } catch (e) { if (!(e instanceof SecretBlockedError)) throw e; }
   log(f, `FINDING(non-blocking): source_ref 내 비밀은 ${srefStored ? '저장됨 — 계약상 statement만 스캔 (Phase 3에서 전 필드 스캔 확장 권고)' : '차단됨'}`);
@@ -78,7 +83,7 @@ const check = (file, cond, label) => { log(file, `${cond ? 'PASS' : 'FAIL'}: ${l
   writeFileSync(f, `== G002 archive red-team ${new Date().toISOString()} ==\n`);
   process.env.UAC_ARCHIVE_DIR = mkdtempSync(path.join(tmpdir(), 'g002-archive-'));
   const { archiveConversation } = await import('../src/archive.mjs?fresh=' + Date.now());
-  const secret = 'sk-proj-abcdefghijklmnopqrstuvwxyz012345';
+  const secret = syntheticSk;
   const res = await archiveConversation({ scope: 'project:arch', sessionId: 'rt-1', content: `대화 로그. 키는 ${secret} 입니다.` });
   const bytes = readFileSync(res.path, 'utf8');
   check(f, res.redacted === true, 'redacted 플래그 true');

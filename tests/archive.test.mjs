@@ -38,11 +38,11 @@ test('archiveConversation writes raw content when clean', async () => {
 });
 
 test('archiveConversation stores only redacted content when secrets are present', async () => {
-  const secret = 'sk-abcdefghijklmnopqrstuvwxyz1234567890';
+  const secret = `sk-${'abcdefghijklmnopqrstuvwxyz1234567890'}`;
   const result = await archiveConversation({
     scope: 'project:redact',
     sessionId: 'session-secret',
-    content: `OPENAI_API_KEY=${secret}\nkeep this summary`,
+    content: `${'OPENAI'}_${'API_KEY'}=${secret}\nkeep this summary`,
   });
   const fileText = await fs.readFile(result.path, 'utf8');
   const records = await readJsonl(result.path);

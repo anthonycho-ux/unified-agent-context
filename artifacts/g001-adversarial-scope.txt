@@ -1,5 +1,5 @@
 # G001 adversarial A — scope isolation
-DATA_DIR=/Users/<mac-user>/unified-agent-context/artifacts/g001-mcp-data-scope
+DATA_DIR=<repo>/artifacts/g001-mcp-data-scope
 server=node node_modules/mcp-memory-keeper/dist/index.js
 TOOLS_HAS_CONTEXT_SAVE=true
 TOOLS_HAS_CONTEXT_GET=true

@@ -1,5 +1,5 @@
 # G001 adversarial B — persistence across server/client restart
-DATA_DIR=/Users/<mac-user>/unified-agent-context/artifacts/g001-mcp-data-persistence
+DATA_DIR=<repo>/artifacts/g001-mcp-data-persistence
 KEY=g001_persist_1783418277247_key
 VALUE=G001_PERSIST_VALUE_g001_persist_1783418277247
 STEP=spawn separate client process #1; it spawns memory-keeper server, writes, closes, and exits

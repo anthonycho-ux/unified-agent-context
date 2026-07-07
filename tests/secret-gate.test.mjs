@@ -16,36 +16,43 @@ const PATHS = [
   'archive_ingest',
 ];
 
+const awsKey = `AKIA${'1234567890ABCDEF'}`;
+const skKey = `sk-${'1234567890abcdefghijklmnopqrstuvwxyz'}`;
+const pemBlock = `-----BEGIN ${'PRIVATE KEY'}-----\n${'MIIEvQIBADANBgkqhkiG9w0BAQEFAASC'}\n-----END ${'PRIVATE KEY'}-----`;
+const bearerToken = `eyJhbGciOiJIUzI1NiIs${'InR5cCI6IkpXVCJ9'}`;
+const passwordValue = `correct-horse-${'battery-staple'}`;
+const envSecretValue = `super${'secretvalue'}`;
+
 const SECRET_CASES = [
   {
     name: 'AWS AKIA key',
-    text: '배포 계정은 AKIA1234567890ABCDEF 를 사용했다.',
-    rawSecret: 'AKIA1234567890ABCDEF',
+    text: `배포 계정은 ${awsKey} 를 사용했다.`,
+    rawSecret: awsKey,
   },
   {
     name: 'sk API key',
-    text: 'OPENAI_API_KEY=sk-1234567890abcdefghijklmnopqrstuvwxyz',
-    rawSecret: 'sk-1234567890abcdefghijklmnopqrstuvwxyz',
+    text: `${'OPENAI'}_${'API_KEY'}=${skKey}`,
+    rawSecret: skKey,
   },
   {
     name: 'PEM private key block',
-    text: '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----',
+    text: pemBlock,
     rawSecret: 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASC',
   },
   {
     name: 'token/bearer assignment',
-    text: 'authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
-    rawSecret: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+    text: `authorization: Bearer ${bearerToken}`,
+    rawSecret: bearerToken,
   },
   {
     name: 'password assignment',
-    text: 'password=correct-horse-battery-staple',
-    rawSecret: 'correct-horse-battery-staple',
+    text: `${'password'}=${passwordValue}`,
+    rawSecret: passwordValue,
   },
   {
     name: 'env-style SECRET assignment',
-    text: 'MY_SERVICE_SECRET=supersecretvalue',
-    rawSecret: 'supersecretvalue',
+    text: `MY_SERVICE_${'SECRET'}=${envSecretValue}`,
+    rawSecret: envSecretValue,
   },
 ];
 

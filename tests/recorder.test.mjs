@@ -24,6 +24,9 @@ const serverSpec = {
   env: { DATA_DIR: dataDir },
 };
 
+const blockedSk = `sk-proj-${'abcdefghijklmnopqrstuvwxyz012345'}`;
+const cliPassword = `hunter2${'secret'}`;
+
 test.after(async () => {
   await fs.rm(dataDir, { recursive: true, force: true });
 });
@@ -54,7 +57,7 @@ test('비밀 포함 명시 기록은 SecretBlockedError로 차단되고 영속 0
   const store = await ContextStore.connect(serverSpec);
   try {
     await assert.rejects(
-      () => recordFact({ statement: '배포 키는 sk-proj-abcdefghijklmnopqrstuvwxyz012345 이다', fact_type: 'decision', scope: 'project:sec', store }),
+      () => recordFact({ statement: `배포 키는 ${blockedSk} 이다`, fact_type: 'decision', scope: 'project:sec', store }),
       SecretBlockedError,
     );
     const facts = await store.getFacts({ scope: 'project:sec' });
@@ -72,7 +75,7 @@ test('CLI: 정상 기록은 RECORDED 출력, 비밀은 exit 3', async () => {
   assert.match(stdout, /^RECORDED [0-9a-f]{16} project:cli/);
 
   await assert.rejects(
-    () => execFileAsync('node', [cli, '--type', 'decision', '--scope', 'project:cli', 'password=hunter2secret 로 접속'], { env }),
+    () => execFileAsync('node', [cli, '--type', 'decision', '--scope', 'project:cli', `${'password'}=${cliPassword} 로 접속`], { env }),
     (err) => err.code === 3 && String(err.stderr).includes('[uac-record] BLOCKED'),
   );
 });

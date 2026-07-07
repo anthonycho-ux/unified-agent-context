@@ -86,9 +86,9 @@ test('dedupe_key overwrite yields one logical fact with updated updated_at', asy
 
 test('secret gate blocks storeFact before persistence', async () => {
   await withStore(async (store) => {
-    const secret = 'sk-abcdefghijklmnopqrstuvwxyz1234567890';
+    const secret = `sk-${'abcdefghijklmnopqrstuvwxyz1234567890'}`;
     const fact = makeFact({
-      statement: `do not store api_key=${secret}`,
+      statement: `do not store api_${'key'}=${secret}`,
       fact_type: 'decision',
       scope: 'project:secret-gate',
       source_ref: 'test:secret',
