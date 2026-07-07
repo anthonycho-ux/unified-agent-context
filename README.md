@@ -1,4 +1,4 @@
-# unified-agent-context
+# Unified Agent Context
 
 여러 AI 에이전트(claude code, codex, hermes, gajaecode, lettacode, …)의 컨텍스트/메모리를 하나의 로컬 공유 저장소로 통합하는 v1 시스템.
 
