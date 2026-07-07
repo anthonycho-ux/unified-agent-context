@@ -48,7 +48,20 @@ try {
     await store.close().catch(() => {});
   }
   process.exit(0);
-} catch {
-  // 세션 종료를 방해하지 않는다 — 증류 실패는 다음 세션 종료 시 재시도 기회가 있다.
+} catch (error) {
+  // 세션 종료는 방해하지 않되, 실패는 구조화 로그로 남긴다 (조용한 스킵 금지).
+  try {
+    const fsp = await import('node:fs/promises');
+    const pathMod = await import('node:path');
+    const file = process.env.UAC_LOG_PATH ?? new URL('../data/logs/injector.log', import.meta.url).pathname;
+    await fsp.default.mkdir(pathMod.default.dirname(file), { recursive: true });
+    await fsp.default.appendFile(
+      file,
+      `${JSON.stringify({ ts: new Date().toISOString(), event: 'session_end_distill_failed', reason: error?.message ?? String(error) })}\n`,
+      'utf8',
+    );
+  } catch {
+    process.stderr.write(`[uac-distill] session-end distill failed: ${error?.message ?? error}\n`);
+  }
   process.exit(0);
 }
