@@ -1,0 +1,45 @@
+PASS [full] claude→codex — 기대 사실 인지
+PASS [full] claude→hermes — 기대 사실 인지
+PASS [smoke] claude→gajaecode — 기대 사실 인지
+PASS [smoke] claude→lettacode — 기대 사실 인지
+PASS [full] codex→claude — 기대 사실 인지
+PASS [smoke] codex→hermes — 기대 사실 인지
+PASS [smoke] codex→gajaecode — 기대 사실 인지
+PASS [smoke] codex→lettacode — 기대 사실 인지
+PASS [smoke] hermes→claude — 기대 사실 인지
+PASS [smoke] hermes→codex — 기대 사실 인지
+PASS [full] hermes→gajaecode — 기대 사실 인지
+PASS [smoke] hermes→lettacode — 기대 사실 인지
+PASS [smoke] gajaecode→claude — 기대 사실 인지
+PASS [smoke] gajaecode→codex — 기대 사실 인지
+PASS [smoke] gajaecode→hermes — 기대 사실 인지
+PASS [full] gajaecode→lettacode — 기대 사실 인지
+PASS [full] lettacode→claude — 기대 사실 인지
+PASS [smoke] lettacode→codex — 기대 사실 인지
+PASS [smoke] lettacode→hermes — 기대 사실 인지
+PASS [smoke] lettacode→gajaecode — 기대 사실 인지
+
+## 매트릭스 rows (markdown)
+
+| claude | codex | MCP context_save (claude 등록 서버) | AGENTS.md 지시 pull — MCP context_get | full | 매트릭스 claude→codex 결정 | 기대 사실 인지 | PASS |
+| claude | hermes | MCP context_save (claude 등록 서버) | pre_llm_call 셸 훅 (hermes-pre-llm-hook.sh) | full | 매트릭스 claude→hermes 결정 | 기대 사실 인지 | PASS |
+| claude | gajaecode | MCP context_save (claude 등록 서버) | 사용자 rule 지시 pull (inject-context.mjs) | smoke | 매트릭스 claude→gajaecode 결정 | 기대 사실 인지 | PASS |
+| claude | lettacode | MCP context_save (claude 등록 서버) | 표준 온보딩 주입 (inject-context.mjs — 미설치 시뮬레이션) | smoke | 매트릭스 claude→lettacode 결정 | 기대 사실 인지 | PASS |
+| codex | claude | MCP context_save (codex config.toml 등록 서버) | SessionStart 훅 커맨드 실행 (inject-context.mjs) | full | 매트릭스 codex→claude 결정 | 기대 사실 인지 | PASS |
+| codex | hermes | MCP context_save (codex config.toml 등록 서버) | pre_llm_call 셸 훅 (hermes-pre-llm-hook.sh) | smoke | 매트릭스 codex→hermes 결정 | 기대 사실 인지 | PASS |
+| codex | gajaecode | MCP context_save (codex config.toml 등록 서버) | 사용자 rule 지시 pull (inject-context.mjs) | smoke | 매트릭스 codex→gajaecode 결정 | 기대 사실 인지 | PASS |
+| codex | lettacode | MCP context_save (codex config.toml 등록 서버) | 표준 온보딩 주입 (inject-context.mjs — 미설치 시뮬레이션) | smoke | 매트릭스 codex→lettacode 결정 | 기대 사실 인지 | PASS |
+| hermes | claude | MCP context_save (hermes mcp 등록 서버) | SessionStart 훅 커맨드 실행 (inject-context.mjs) | smoke | 매트릭스 hermes→claude 결정 | 기대 사실 인지 | PASS |
+| hermes | codex | MCP context_save (hermes mcp 등록 서버) | AGENTS.md 지시 pull — MCP context_get | smoke | 매트릭스 hermes→codex 결정 | 기대 사실 인지 | PASS |
+| hermes | gajaecode | MCP context_save (hermes mcp 등록 서버) | 사용자 rule 지시 pull (inject-context.mjs) | full | 매트릭스 hermes→gajaecode 결정 | 기대 사실 인지 | PASS |
+| hermes | lettacode | MCP context_save (hermes mcp 등록 서버) | 표준 온보딩 주입 (inject-context.mjs — 미설치 시뮬레이션) | smoke | 매트릭스 hermes→lettacode 결정 | 기대 사실 인지 | PASS |
+| gajaecode | claude | record-fact CLI (explicit_write 게이트) | SessionStart 훅 커맨드 실행 (inject-context.mjs) | smoke | 매트릭스 gajaecode→claude 결정 | 기대 사실 인지 | PASS |
+| gajaecode | codex | record-fact CLI (explicit_write 게이트) | AGENTS.md 지시 pull — MCP context_get | smoke | 매트릭스 gajaecode→codex 결정 | 기대 사실 인지 | PASS |
+| gajaecode | hermes | record-fact CLI (explicit_write 게이트) | pre_llm_call 셸 훅 (hermes-pre-llm-hook.sh) | smoke | 매트릭스 gajaecode→hermes 결정 | 기대 사실 인지 | PASS |
+| gajaecode | lettacode | record-fact CLI (explicit_write 게이트) | 표준 온보딩 주입 (inject-context.mjs — 미설치 시뮬레이션) | full | 매트릭스 gajaecode→lettacode 결정 | 기대 사실 인지 | PASS |
+| lettacode | claude | MCP context_save (표준 온보딩 경로 — 미설치 시뮬레이션) | SessionStart 훅 커맨드 실행 (inject-context.mjs) | full | 매트릭스 lettacode→claude 결정 | 기대 사실 인지 | PASS |
+| lettacode | codex | MCP context_save (표준 온보딩 경로 — 미설치 시뮬레이션) | AGENTS.md 지시 pull — MCP context_get | smoke | 매트릭스 lettacode→codex 결정 | 기대 사실 인지 | PASS |
+| lettacode | hermes | MCP context_save (표준 온보딩 경로 — 미설치 시뮬레이션) | pre_llm_call 셸 훅 (hermes-pre-llm-hook.sh) | smoke | 매트릭스 lettacode→hermes 결정 | 기대 사실 인지 | PASS |
+| lettacode | gajaecode | MCP context_save (표준 온보딩 경로 — 미설치 시뮬레이션) | 사용자 rule 지시 pull (inject-context.mjs) | smoke | 매트릭스 lettacode→gajaecode 결정 | 기대 사실 인지 | PASS |
+
+MATRIX_ALL_PASS (20 directed paths)
