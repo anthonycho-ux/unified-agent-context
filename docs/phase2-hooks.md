@@ -9,7 +9,7 @@
 | 하네스 | 메커니즘 | 배선 위치 | 상태 | 분류 |
 |--------|----------|-----------|------|------|
 | claude code | `SessionStart` 훅 (stdout이 컨텍스트로 추가) + MCP `unified-memory` | `~/.claude/settings.json` hooks.SessionStart, `claude mcp add unified-memory` (DATA_DIR=프로덕션 스토어) | 배선 완료, MCP health ✔ Connected. 인-세션 실검증은 CLI 로그인 필요(인간 의존, Phase 4) | 훅 지원 |
-| gajaecode (GJC) | GJC 훅 시스템 `before_agent_start` (세션당 1회 message 주입) | `~/.gjc/hooks/uac-inject.mjs` | 배선 완료, 문법 검증 통과. 다음 GJC 세션부터 로드 | 훅 지원 |
+| gajaecode (GJC) | **지시 기반 pull** — 사용자 rule이 세션 시작 시 injector 실행을 지시 + MCP `unified-memory` 등록 | `~/.gjc/agent/rules/uac-shared-context.md`, `~/.gjc/agent/mcp.json` | **라이브 검증 완료** — 새 `gjc -p` 세션이 rule pull로 결정 인지 (G005). GJC 확장(`before_agent_start`) 자동 주입은 확장 탐색이 `-p` 모드에서 로드되지 않아 후속 개선 항목으로 전환 | 지시 pull (확장 자동주입 후속) |
 | hermes | 셸 훅 `pre_llm_call` (stdout JSON `{"context":...}` 주입, `is_first_turn`에만) + MCP `unified-memory` (38 tools) | `~/.hermes/config.yaml` hooks 블록 → `scripts/hermes-pre-llm-hook.sh` | 배선 완료, 합성 페이로드 테스트 통과. 첫 실행 시 hermes 최초 사용 동의(allowlist) 프롬프트 1회 필요 | 훅 지원 |
 | codex | 세션 시작 훅 부재 → **지시 기반 pull** (AGENTS.md 지시 + MCP 도구 직접 호출) | `~/.codex/config.toml` [mcp_servers.unified-memory], `~/.codex/AGENTS.md` 공유 컨텍스트 지시 | 배선 완료 | **확인된 하네스 제약** — 수동/지시 pull 폴백 (플랜 허용 조건) |
 | lettacode | 이 머신에 CLI 미설치 — 바이너리/설정 디렉토리 미발견 | 온보딩 문서의 표준 절차(MCP 연결 + 훅 설정) 적용 대상 | 미배선 (환경 부재) | **확인된 하네스 제약** — 설치 후 표준 온보딩 절차로 합류 |
