@@ -32,15 +32,12 @@ async function readOrNull(p) {
   add('claude code', 'MCP unified-memory', (claudeJson ?? '').includes('unified-memory'));
 }
 
-// gajaecode (GJC)
+// gajaecode (GJC) — 사용자 rule 지시 pull + MCP 등록 (확장 자동주입은 후속 개선 항목)
 {
-  const hookPath = path.join(HOME, '.gjc/hooks/uac-inject.mjs');
-  const body = await readOrNull(hookPath);
-  let syntaxOk = false;
-  if (body) {
-    try { await run('node', ['--check', hookPath]); syntaxOk = true; } catch { /* syntax error */ }
-  }
-  add('gajaecode', 'before_agent_start 훅', Boolean(body) && syntaxOk, syntaxOk ? '' : '파일 없음/문법 오류');
+  const rule = await readOrNull(path.join(HOME, '.gjc/agent/rules/uac-shared-context.md'));
+  add('gajaecode', '공유 컨텍스트 rule (지시 pull)', (rule ?? '').includes('inject-context.mjs'));
+  const mcp = await readOrNull(path.join(HOME, '.gjc/agent/mcp.json'));
+  add('gajaecode', 'MCP unified-memory', (mcp ?? '').includes('unified-memory'));
 }
 
 // hermes
