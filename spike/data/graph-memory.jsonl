@@ -1,0 +1,1 @@
+{"type":"entity","name":"Phase0SpikeDecision","entityType":"decision","observations":["DB는 Postgres로 전환 (scope: project:spike)"]}
