@@ -12,6 +12,8 @@ code, codex, hermes, gajaecode, lettacode — and every other agent knows it in
 its very next session. Automatically, on every machine, with secrets locked
 out by design.
 
+![UAC in 27 seconds](artifacts/promo/uac-promo.gif)
+
 ## Architecture (canonical store = sov, device-independent access)
 
 ```
@@ -61,3 +63,10 @@ node --test 'tests/*.test.mjs'                       # full test suite (73)
 ## 2-week real-use gate (in progress)
 
 All scenario tests pass. Final acceptance is judged by the user: **does the feeling of "explaining things again" disappear over 2 weeks of real use?** Every time a re-explanation happens, log it with `reexplain.mjs log`; after 2 weeks, check whether the weekly trend in `report` converges to zero.
+
+## Credits
+
+Built end-to-end with **[GJC (Gajae Code)](https://github.com/Yeachan-Heo/gajae-code)**,
+an AI coding agent: the store phases, this README's narrative style across all
+five languages, and the promo animation above were implemented, verified, and
+shipped by GJC — using UAC's own shared memory while building it.

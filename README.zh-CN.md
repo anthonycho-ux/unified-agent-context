@@ -10,6 +10,8 @@
 claude code、codex、hermes、gajaecode、lettacode——其他每个智能体在下一次会话
 中就都知道了。全自动、跨设备，并且密钥从设计上就被挡在门外。
 
+![UAC demo](artifacts/promo/uac-promo.gif)
+
 ## 架构（权威存储 = sov，设备无关访问）
 
 ```
@@ -59,3 +61,9 @@ node --test 'tests/*.test.mjs'                       # 全部测试 (73)
 ## 2 周实际使用验收（进行中）
 
 所有场景测试均已通过。最终验收由用户判定：**在 2 周的实际使用中，"再解释一遍"的感觉是否消失？** 每次发生重复解释时用 `reexplain.mjs log` 记录；2 周后查看 `report` 的周趋势是否收敛到零。
+
+## 致谢
+
+与 **[GJC (Gajae Code)](https://github.com/Yeachan-Heo/gajae-code)**（一个 AI
+编程智能体）从头到尾共同构建：存储各阶段、五种语言 README 的叙事风格、以及上方的
+宣传动画，均由 GJC 实现、验证并交付——而且在构建过程中就使用了 UAC 自己的共享记忆。
