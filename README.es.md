@@ -13,6 +13,8 @@ una sola vez — claude code, codex, hermes, gajaecode, lettacode — y todos lo
 demás la sabrán en su próxima sesión. Automáticamente, en todas tus máquinas,
 con los secretos bloqueados por diseño.
 
+![UAC demo](artifacts/promo/uac-promo.gif)
+
 ## Arquitectura (almacén canónico = store-host, acceso independiente del dispositivo)
 
 ```
@@ -62,3 +64,10 @@ node --test 'tests/*.test.mjs'                       # suite completa de tests (
 ## Puerta de uso real de 2 semanas (en curso)
 
 Todos los tests de escenario pasan. La aceptación final la juzga el usuario: **¿desaparece la sensación de "explicarlo otra vez" tras 2 semanas de uso real?** Cada vez que ocurra una re-explicación, regístrala con `reexplain.mjs log`; tras 2 semanas, comprueba si la tendencia semanal de `report` converge a cero.
+
+## Créditos
+
+Construido de principio a fin con **[GJC (Gajae Code)](https://github.com/Yeachan-Heo/gajae-code)**,
+un agente de IA para programación: las fases del almacén, el estilo narrativo de este
+README en los cinco idiomas y la animación promocional de arriba fueron implementados,
+verificados y publicados por GJC — usando la propia memoria compartida de UAC mientras la construía.
