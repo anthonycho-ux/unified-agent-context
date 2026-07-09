@@ -3,16 +3,15 @@
 [English](README.md) | [한국어](README.ko.md) | **中文** | [日本語](README.ja.md) | [Español](README.es.md)
 
 每一次新的 AI 对话都从失忆开始。昨天你告诉 Claude 你的 README 默认用英文，
-今天早上 Codex 又问了一遍，今晚第三个助手还会再问。你用着五个 AI 智能体，
-而它们唯一共享的记忆就是你自己——你正在被一次次的重复解释慢慢消耗。
+今天早上 Codex 又问了一遍，今晚第三个助手还会再问。你有五个智能体，
+它们唯一共享的记忆就是你。你正在被一次次的重复解释慢慢消耗。
 
-**Unified Agent Context 终结了这一切。** 只需对任何一个智能体说一次决定——
-claude code、codex、hermes、gajaecode、lettacode——其他每个智能体在下一次会话
-中就都知道了。全自动、跨设备，并且密钥从设计上就被挡在门外。
+**Unified Agent Context 终结了这一切。** 只对任何一个智能体说一次。
+其他每个智能体在下一次会话里就都知道了。全自动，跨设备，密钥被挡在门外。
 
-![UAC demo](artifacts/promo/uac-promo.gif)
+![UAC 27秒演示](artifacts/promo/uac-promo.gif)
 
-## 架构（权威存储 = sov，设备无关访问）
+## 它如何工作
 
 ```
 Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canonical: sov ~/.uac/data/memory)
@@ -24,28 +23,31 @@ Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canon
                  sov Letta "The Noticer" inbox (Phase 5)
 ```
 
-- 作用域：`global`（偏好）vs `project:<git-root-basename>`（决策/工作状态）——阻止跨项目泄漏（由服务端查询强制执行）
-- TTL：decision/preference 永久保留，project_state 保留 90 天
-- 原始对话仅进入冷归档（绝不注入；密钥只做脱敏处理）
-- 降级模式：服务器不可达时发出 4 类证据（warning/log/health/metric）；`UAC_STRICT=1` 时转为硬失败
-- 设备无关：权威存储位于 sov——其他机器（如 Mac）通过 `uac.config.json` 配置的 ssh 派生进程访问（Phase 6）
-- v2 计划：离线本地队列 + 重新同步 / 自托管远程 MCP + 认证 → 接入 claude.ai
+用大白话说。
+
+- 所有智能体读写同一份共享记忆。
+- 偏好走到哪跟到哪，项目决定只留在项目里。
+- 决定和偏好永久保存，日常工作状态 90 天后过期。
+- 原始对话不会被注入会话，它们只进冷归档，密钥在入库时就被清除。
+- 每次写入都要过一道密钥闸门，钥匙和密码默认被拦下。
+- 存储连不上时，智能体会大声说出来，不会悄悄糊弄。
+- 主存储在一台叫 sov 的家用服务器上，其他机器通过 ssh 访问。
 
 ## 文档
 
-| 文档 | 内容 |
-|------|------|
-| `docs/phase0-comparison.md` | 存储候选对比 + 采纳依据 |
-| `docs/phase1-storage.md` | Schema / 作用域 / TTL / 密钥门 |
-| `docs/phase2-hooks.md` | 5 个运行框架的接线 + 降级模式 |
-| `docs/phase3-write-paths.md` | 5 条写入路径 + 蒸馏/隔离 |
-| `docs/phase4-coverage-matrix.md` | 20 路径覆盖矩阵 + 验证层级 |
-| `docs/phase5-librarian.md` | Letta 图书管理员移交通道（single-writer 策展） |
-| `docs/phase6-remote.md` | 权威存储迁移至 sov + ssh stdio-MCP 访问 |
-| `docs/onboarding.md` | **新智能体接入流程（5 分钟）** |
-| `docs/handoff-tailscale-connectivity.md` | 存储连接（Tailscale/LAN）问题 + 自动回退移交提示词 |
+| 文档 | 讲什么 |
+|------|--------|
+| `docs/phase0-comparison.md` | 我们选了哪个存储，为什么。 |
+| `docs/phase1-storage.md` | 数据结构，作用域，保留期限，密钥闸门。 |
+| `docs/phase2-hooks.md` | 五个智能体各自是怎么接进来的。 |
+| `docs/phase3-write-paths.md` | 事实写入的五条路，以及蒸馏和隔离。 |
+| `docs/phase4-coverage-matrix.md` | 二十条传递路径，全部测试验证。 |
+| `docs/phase5-librarian.md` | 管理永久事实的图书管理员通道。 |
+| `docs/phase6-remote.md` | 主存储搬到 sov，以及 ssh 访问。 |
+| `docs/onboarding.md` | 新智能体五分钟加入的方法。 |
+| `docs/handoff-tailscale-connectivity.md` | 存储连接不稳时怎么办。 |
 
-## 常用命令
+## 命令
 
 ```sh
 node scripts/inject-context.mjs [--cwd <dir>]        # 输出共享上下文块
@@ -58,12 +60,14 @@ node scripts/reexplain.mjs log|report                # 重复解释度量（2 �
 node --test 'tests/*.test.mjs'                       # 全部测试 (73)
 ```
 
-## 2 周实际使用验收（进行中）
+## 两周测试
 
-所有场景测试均已通过。最终验收由用户判定：**在 2 周的实际使用中，"再解释一遍"的感觉是否消失？** 每次发生重复解释时用 `reexplain.mjs log` 记录；2 周后查看 `report` 的周趋势是否收敛到零。
+所有场景测试都通过了。真正的测试是这个。两周日常使用后，你是否还会把同一句话
+说第二遍。每次重复就用 `reexplain.mjs log` 记一笔。周计数降到零，UAC 就成功了。
 
 ## 致谢
 
-与 **[GJC (Gajae Code)](https://github.com/Yeachan-Heo/gajae-code)**（一个 AI
-编程智能体）从头到尾共同构建：存储各阶段、五种语言 README 的叙事风格、以及上方的
-宣传动画，均由 GJC 实现、验证并交付——而且在构建过程中就使用了 UAC 自己的共享记忆。
+与 **[GJC, Gajae Code](https://github.com/Yeachan-Heo/gajae-code)**，一个 AI
+编程智能体，一起从头到尾构建。存储各阶段，五种语言 README 的叙事风格，
+还有上面的宣传动画，都由 GJC 实现，验证并交付。构建过程中它用的就是 UAC
+自己的共享记忆。
