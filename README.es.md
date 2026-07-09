@@ -12,6 +12,9 @@ re-explicación a la vez.
 una sola vez. Todos los demás la sabrán en su próxima sesión. Automáticamente,
 en todas tus máquinas, con los secretos bloqueados.
 
+Nunca conectas la memoria a mano. Nunca copias el contexto de un agente a otro.
+Esa es toda la promesa. Si algún día tienes que hacerlo tú, UAC ha fracasado.
+
 ![Demo de UAC en 27 segundos](artifacts/promo/uac-promo.gif)
 
 ## Cómo funciona
