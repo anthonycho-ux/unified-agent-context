@@ -4,18 +4,17 @@
 
 Cada nuevo chat con una IA empieza con amnesia. Ayer le dijiste a Claude que
 prefieres los README en inglés. Esta mañana lo preguntó Codex. Esta noche lo
-volverá a preguntar un tercer asistente. Usas cinco agentes de IA, y la única
-memoria que comparten eres tú — y te estás gastando a ti mismo, una
+volverá a preguntar un tercer asistente. Tienes cinco agentes, y la única
+memoria que comparten eres tú. Te estás gastando a ti mismo, una
 re-explicación a la vez.
 
 **Unified Agent Context acaba con eso.** Dile una decisión a cualquier agente
-una sola vez — claude code, codex, hermes, gajaecode, lettacode — y todos los
-demás la sabrán en su próxima sesión. Automáticamente, en todas tus máquinas,
-con los secretos bloqueados por diseño.
+una sola vez. Todos los demás la sabrán en su próxima sesión. Automáticamente,
+en todas tus máquinas, con los secretos bloqueados.
 
-![UAC demo](artifacts/promo/uac-promo.gif)
+![Demo de UAC en 27 segundos](artifacts/promo/uac-promo.gif)
 
-## Arquitectura (almacén canónico = store-host, acceso independiente del dispositivo)
+## Cómo funciona
 
 ```
 Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canonical: store-host ~/.uac/data/memory)
@@ -27,28 +26,31 @@ Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canon
                  store-host Letta "The Noticer" inbox (Phase 5)
 ```
 
-- Ámbitos: `global` (preferencias) vs `project:<git-root-basename>` (decisiones/estado de trabajo) — fuga entre proyectos bloqueada (impuesto por consultas del lado del servidor)
-- TTL: decision/preference se conservan permanentemente, project_state 90 días
-- Las conversaciones en bruto van solo al archivo frío (nunca se inyectan; los secretos solo se redactan)
-- Modo degradado: si el servidor no está accesible, emite 4 evidencias (warning/log/health/metric); con `UAC_STRICT=1` se convierte en fallo duro
-- Independencia del dispositivo: el almacén canónico vive en store-host — otras máquinas (p. ej. el Mac) lo alcanzan vía ssh según `uac.config.json` (Phase 6)
-- Planeado para v2: cola local offline + resincronización / MCP remoto autoalojado + autenticación → incorporación de claude.ai
+En palabras simples.
 
-## Documentación
+- Todos tus agentes leen y escriben una sola memoria compartida.
+- Una preferencia te sigue a todas partes. Una decisión de proyecto se queda dentro de su proyecto.
+- Las decisiones y preferencias se guardan para siempre. El estado de trabajo expira a los 90 días.
+- Las conversaciones en bruto nunca se inyectan en sesiones. Van solo al archivo frío, con los secretos borrados al entrar.
+- Cada escritura pasa por una puerta de secretos. Las claves y contraseñas se bloquean por defecto.
+- Si el almacén no responde, los agentes lo dicen en voz alta en lugar de adivinar en silencio.
+- El almacén principal vive en un servidor casero llamado store-host. Las demás máquinas llegan por ssh.
 
-| Doc | Contenido |
-|-----|-----------|
-| `docs/phase0-comparison.md` | Comparativa de candidatos de almacén + justificación |
-| `docs/phase1-storage.md` | Esquema / ámbitos / TTL / puerta de secretos |
-| `docs/phase2-hooks.md` | Cableado de los 5 harnesses + modo degradado |
-| `docs/phase3-write-paths.md` | Las 5 rutas de escritura + destilación/cuarentena |
-| `docs/phase4-coverage-matrix.md` | Matriz de cobertura de 20 rutas + niveles de verificación |
-| `docs/phase5-librarian.md` | Carril de handoff del bibliotecario Letta (curación single-writer) |
-| `docs/phase6-remote.md` | Traslado del almacén canónico a store-host + acceso ssh stdio-MCP |
-| `docs/onboarding.md` | **Procedimiento de incorporación de nuevos agentes (5 min)** |
-| `docs/handoff-tailscale-connectivity.md` | Problema de conectividad del almacén (Tailscale/LAN) + prompt de handoff con fallback automático |
+## La documentación
 
-## Comandos clave
+| Doc | De qué trata |
+|-----|--------------|
+| `docs/phase0-comparison.md` | Qué almacén elegimos, y por qué. |
+| `docs/phase1-storage.md` | El esquema, los ámbitos, la retención, la puerta de secretos. |
+| `docs/phase2-hooks.md` | Cómo se conecta cada uno de los cinco agentes. |
+| `docs/phase3-write-paths.md` | Las cinco rutas de escritura, más destilación y cuarentena. |
+| `docs/phase4-coverage-matrix.md` | Veinte rutas de entrega, todas probadas y verificadas. |
+| `docs/phase5-librarian.md` | El carril del bibliotecario que cura los hechos permanentes. |
+| `docs/phase6-remote.md` | La mudanza del almacén principal a store-host, y el acceso por ssh. |
+| `docs/onboarding.md` | Cómo un agente nuevo se une en cinco minutos. |
+| `docs/handoff-tailscale-connectivity.md` | Qué hacer cuando la conexión al almacén falla. |
+
+## Los comandos
 
 ```sh
 node scripts/inject-context.mjs [--cwd <dir>]        # imprime el bloque de contexto compartido
@@ -57,17 +59,20 @@ node scripts/distill-session.mjs --file <transcript> # destila una sesión + bar
 node scripts/librarian-sync.mjs [--strict]           # entrega outbox → inbox del bibliotecario en store-host (Phase 5)
 node scripts/doctor.mjs                              # autocomprobación del cableado
 node scripts/cross-verify.mjs                        # re-ejecuta la matriz de cobertura de 20 rutas
-node scripts/reexplain.mjs log|report                # métricas de re-explicación (indicador auxiliar de la puerta de 2 semanas)
+node scripts/reexplain.mjs log|report                # métricas de re-explicación (indicador auxiliar)
 node --test 'tests/*.test.mjs'                       # suite completa de tests (73)
 ```
 
-## Puerta de uso real de 2 semanas (en curso)
+## La prueba de dos semanas
 
-Todos los tests de escenario pasan. La aceptación final la juzga el usuario: **¿desaparece la sensación de "explicarlo otra vez" tras 2 semanas de uso real?** Cada vez que ocurra una re-explicación, regístrala con `reexplain.mjs log`; tras 2 semanas, comprueba si la tendencia semanal de `report` converge a cero.
+Todos los tests de escenario pasan. La prueba real es otra. Tras dos semanas
+de uso diario, sigues explicando lo mismo dos veces, o ya no. Registra cada
+repetición con `reexplain.mjs log`. Si el conteo semanal cae a cero, UAC funciona.
 
 ## Créditos
 
-Construido de principio a fin con **[GJC (Gajae Code)](https://github.com/Yeachan-Heo/gajae-code)**,
-un agente de IA para programación: las fases del almacén, el estilo narrativo de este
-README en los cinco idiomas y la animación promocional de arriba fueron implementados,
-verificados y publicados por GJC — usando la propia memoria compartida de UAC mientras la construía.
+Construido de principio a fin con **[GJC, Gajae Code](https://github.com/Yeachan-Heo/gajae-code)**,
+un agente de IA para programación. Las fases del almacén, el estilo narrativo
+de este README en cinco idiomas y la animación de arriba fueron implementados,
+verificados y publicados por GJC. Mientras construía UAC usaba la memoria
+compartida del propio UAC.

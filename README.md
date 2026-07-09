@@ -4,17 +4,16 @@
 
 Every new AI chat starts with amnesia. Yesterday you told Claude you like your
 READMEs in English. This morning Codex asked. Tonight a third assistant will
-ask again. You run five AI agents, and you are the only memory they share —
-and you're spending yourself one re-explanation at a time.
+ask again. You run five AI agents, and you are the only memory they share.
+You are spending yourself one re-explanation at a time.
 
-**Unified Agent Context ends that.** Tell any agent a decision once — claude
-code, codex, hermes, gajaecode, lettacode — and every other agent knows it in
-its very next session. Automatically, on every machine, with secrets locked
-out by design.
+**Unified Agent Context ends that.** Tell any agent a decision once. Every
+other agent knows it in its very next session. Automatically, on every
+machine, with secrets locked out by design.
 
 ![UAC in 27 seconds](artifacts/promo/uac-promo.gif)
 
-## Architecture (canonical store = store-host, device-independent access)
+## How it works
 
 ```
 Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canonical: store-host ~/.uac/data/memory)
@@ -26,28 +25,31 @@ Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canon
                  store-host Letta "The Noticer" inbox (Phase 5)
 ```
 
-- Scopes: `global` (preferences) vs `project:<git-root-basename>` (decisions/work state) — cross-project leakage blocked (enforced by server-side queries)
-- TTL: decision/preference kept permanently, project_state 90 days
-- Raw conversations go to cold archive only (never injected; secrets are redact-only)
-- Degraded mode: when the server is unreachable, emit 4 evidences (warning/log/health/metric); `UAC_STRICT=1` turns it into a hard failure
-- Device independence: the canonical store lives on store-host — other machines (e.g. the Mac) reach it via ssh spawn configured in `uac.config.json` (Phase 6)
-- Planned for v2: offline local queue + resync / self-hosted remote MCP + auth → claude.ai joining
+In plain words.
 
-## Documentation
+- All your agents read and write one shared memory.
+- A preference follows you everywhere. A project decision stays inside its project.
+- Decisions and preferences are kept forever. Day to day work state expires after 90 days.
+- Raw conversations are never injected into sessions. They rest in a cold archive, and secrets are scrubbed on the way in.
+- Every write passes a secret gate. Keys and passwords are blocked by default.
+- If the store is unreachable, agents say so loudly instead of guessing quietly.
+- The main store lives on one home server named store-host. Every other machine reaches it over ssh.
 
-| Doc | Contents |
-|-----|----------|
-| `docs/phase0-comparison.md` | Store candidate comparison + adoption rationale |
-| `docs/phase1-storage.md` | Schema / scopes / TTL / secret gate |
-| `docs/phase2-hooks.md` | Wiring for the 5 harnesses + degraded mode |
-| `docs/phase3-write-paths.md` | The 5 write paths + distillation/quarantine |
-| `docs/phase4-coverage-matrix.md` | 20-path coverage matrix + verification tiers |
-| `docs/phase5-librarian.md` | Letta librarian handoff lane (single-writer curation) |
-| `docs/phase6-remote.md` | Canonical store move to store-host + ssh stdio-MCP access |
-| `docs/onboarding.md` | **New-agent onboarding procedure (5 min)** |
-| `docs/handoff-tailscale-connectivity.md` | Store connectivity (Tailscale/LAN) issue + auto-fallback handoff prompt |
+## The docs
 
-## Key commands
+| Doc | What it covers |
+|-----|----------------|
+| `docs/phase0-comparison.md` | Which store we picked, and why. |
+| `docs/phase1-storage.md` | The schema, the scopes, retention, and the secret gate. |
+| `docs/phase2-hooks.md` | How each of the five agents is wired in. |
+| `docs/phase3-write-paths.md` | The five ways facts get written, plus distillation and quarantine. |
+| `docs/phase4-coverage-matrix.md` | Twenty delivery paths, tested and verified. |
+| `docs/phase5-librarian.md` | The librarian lane that curates permanent facts. |
+| `docs/phase6-remote.md` | Moving the main store to store-host, and reaching it over ssh. |
+| `docs/onboarding.md` | How a new agent joins in five minutes. |
+| `docs/handoff-tailscale-connectivity.md` | What to do when the store connection flakes. |
+
+## The commands
 
 ```sh
 node scripts/inject-context.mjs [--cwd <dir>]        # print the shared context block
@@ -60,13 +62,16 @@ node scripts/reexplain.mjs log|report                # re-explanation metrics (2
 node --test 'tests/*.test.mjs'                       # full test suite (73)
 ```
 
-## 2-week real-use gate (in progress)
+## The two week test
 
-All scenario tests pass. Final acceptance is judged by the user: **does the feeling of "explaining things again" disappear over 2 weeks of real use?** Every time a re-explanation happens, log it with `reexplain.mjs log`; after 2 weeks, check whether the weekly trend in `report` converges to zero.
+All the scenario tests pass. The real test is different. After two weeks of
+daily use, do you still catch yourself explaining the same thing twice. Log
+every repeat with `reexplain.mjs log`. If the weekly count falls to zero,
+UAC works.
 
 ## Credits
 
-Built end-to-end with **[GJC (Gajae Code)](https://github.com/Yeachan-Heo/gajae-code)**,
-an AI coding agent: the store phases, this README's narrative style across all
-five languages, and the promo animation above were implemented, verified, and
-shipped by GJC — using UAC's own shared memory while building it.
+Built end to end with **[GJC, Gajae Code](https://github.com/Yeachan-Heo/gajae-code)**,
+an AI coding agent. The store phases, the story style of this README in five
+languages, and the promo animation above were implemented, verified, and
+shipped by GJC. While building UAC it was using the shared memory of UAC itself.
