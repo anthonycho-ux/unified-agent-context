@@ -1,9 +1,10 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
-import { SERVER_SPEC } from './config.mjs';
+import { SERVER_SPEC, SERVER_SPECS } from './config.mjs';
 import { validateFact } from './schema.mjs';
 import { assertSafe, scanSecrets } from './secret-gate.mjs';
+import { queueForLibrarian } from './librarian.mjs';
 
 const TOOL_SAVE = 'context_save';
 const TOOL_GET = 'context_get';
@@ -90,19 +91,30 @@ export class ContextStore {
     this.transport = transport;
   }
 
-  static async connect(serverSpec = SERVER_SPEC) {
-    const client = new Client(
-      { name: 'unified-agent-context', version: '0.1.0' },
-      { capabilities: {} },
-    );
-    const transport = new StdioClientTransport({
-      ...serverSpec,
-      env: { ...process.env, ...serverSpec.env },
-      stderr: 'ignore',
-    });
-
-    await client.connect(transport);
-    return new ContextStore(client, transport);
+  static async connect(serverSpec) {
+    // 명시 스펙이 주어지면 그것만, 아니면 후보 목록을 순서대로 시도한다.
+    // (store-host-ts → store-host 폴백: Tailscale on/off 상태와 무관하게 첫 연결 성공을 사용)
+    const specs = serverSpec ? [serverSpec] : (SERVER_SPECS?.length ? SERVER_SPECS : [SERVER_SPEC]);
+    let lastError;
+    for (const spec of specs) {
+      const client = new Client(
+        { name: 'unified-agent-context', version: '0.1.0' },
+        { capabilities: {} },
+      );
+      const transport = new StdioClientTransport({
+        ...spec,
+        env: { ...process.env, ...spec.env },
+        stderr: 'ignore',
+      });
+      try {
+        await client.connect(transport);
+        return new ContextStore(client, transport);
+      } catch (error) {
+        lastError = error;
+        try { await transport.close(); } catch { /* 이미 닫힘 */ }
+      }
+    }
+    throw lastError ?? new Error('no server spec available');
   }
 
   async callTool(name, args) {
@@ -126,6 +138,10 @@ export class ContextStore {
       category: normalized.fact_type,
       channel: normalizeScope(normalized.scope),
     });
+
+    // Phase 5: 영구 팩트는 사서(Letta "The Noticer") outbox에 큐잉된다.
+    // fail-safe — 큐잉 실패가 로컬 저장을 실패시키지 않는다.
+    await queueForLibrarian(normalized);
 
     return normalized;
   }

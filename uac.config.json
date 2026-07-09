@@ -1,0 +1,8 @@
+{
+  "store": {
+    "host": "store-host-ts",
+    "fallbackHosts": ["store-host"],
+    "entry": "/home/user/node_modules/mcp-memory-keeper/dist/index.js",
+    "dataDir": "/home/user/.uac/data/memory"
+  }
+}
