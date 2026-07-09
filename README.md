@@ -2,9 +2,15 @@
 
 **English** | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
-A v1 system that unifies the context/memory of multiple AI agents (claude code, codex, hermes, gajaecode, lettacode, …) into a single shared local store.
+Every new AI chat starts with amnesia. Yesterday you told Claude you like your
+READMEs in English. This morning Codex asked. Tonight a third assistant will
+ask again. You run five AI agents, and you are the only memory they share —
+and you're spending yourself one re-explanation at a time.
 
-**One-line goal:** decisions and preferences made in any agent carry over to every agent's new session — without re-explaining.
+**Unified Agent Context ends that.** Tell any agent a decision once — claude
+code, codex, hermes, gajaecode, lettacode — and every other agent knows it in
+its very next session. Automatically, on every machine, with secrets locked
+out by design.
 
 ## Architecture (canonical store = sov, device-independent access)
 

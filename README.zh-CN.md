@@ -2,9 +2,13 @@
 
 [English](README.md) | [한국어](README.ko.md) | **中文** | [日本語](README.ja.md) | [Español](README.es.md)
 
-一个 v1 系统，将多个 AI 智能体（claude code、codex、hermes、gajaecode、lettacode 等）的上下文/记忆统一到一个共享的本地存储中。
+每一次新的 AI 对话都从失忆开始。昨天你告诉 Claude 你的 README 默认用英文，
+今天早上 Codex 又问了一遍，今晚第三个助手还会再问。你用着五个 AI 智能体，
+而它们唯一共享的记忆就是你自己——你正在被一次次的重复解释慢慢消耗。
 
-**一句话目标：** 在任何智能体中做出的决策与偏好，都会延续到所有智能体的新会话中——无需重新解释。
+**Unified Agent Context 终结了这一切。** 只需对任何一个智能体说一次决定——
+claude code、codex、hermes、gajaecode、lettacode——其他每个智能体在下一次会话
+中就都知道了。全自动、跨设备，并且密钥从设计上就被挡在门外。
 
 ## 架构（权威存储 = sov，设备无关访问）
 
