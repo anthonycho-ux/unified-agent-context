@@ -1,0 +1,57 @@
+# Unified Agent Context
+
+[English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | **Español**
+
+Un sistema v1 que unifica el contexto/memoria de múltiples agentes de IA (claude code, codex, hermes, gajaecode, lettacode, …) en un único almacén local compartido.
+
+**Objetivo en una línea:** las decisiones y preferencias tomadas en cualquier agente se trasladan a cada nueva sesión de todos los agentes — sin volver a explicarlas.
+
+## Arquitectura (almacén canónico = sov, acceso independiente del dispositivo)
+
+```
+Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canonical: sov ~/.uac/data/memory)
+   │  ▲
+   │  └─ Session start: inject distilled facts only (hook or instructed pull) — scripts/inject-context.mjs
+   └──── During session: explicit record (record-fact) / on exit: auto-distill (distill-session)
+              └─ Every write path goes through a central fail-closed secret gate (block or redact)
+              └─ Permanent facts queue into the librarian outbox → librarian-sync delivers to the
+                 sov Letta "The Noticer" inbox (Phase 5)
+```
+
+- Ámbitos: `global` (preferencias) vs `project:<git-root-basename>` (decisiones/estado de trabajo) — fuga entre proyectos bloqueada (impuesto por consultas del lado del servidor)
+- TTL: decision/preference se conservan permanentemente, project_state 90 días
+- Las conversaciones en bruto van solo al archivo frío (nunca se inyectan; los secretos solo se redactan)
+- Modo degradado: si el servidor no está accesible, emite 4 evidencias (warning/log/health/metric); con `UAC_STRICT=1` se convierte en fallo duro
+- Independencia del dispositivo: el almacén canónico vive en sov — otras máquinas (p. ej. el Mac) lo alcanzan vía ssh según `uac.config.json` (Phase 6)
+- Planeado para v2: cola local offline + resincronización / MCP remoto autoalojado + autenticación → incorporación de claude.ai
+
+## Documentación
+
+| Doc | Contenido |
+|-----|-----------|
+| `docs/phase0-comparison.md` | Comparativa de candidatos de almacén + justificación |
+| `docs/phase1-storage.md` | Esquema / ámbitos / TTL / puerta de secretos |
+| `docs/phase2-hooks.md` | Cableado de los 5 harnesses + modo degradado |
+| `docs/phase3-write-paths.md` | Las 5 rutas de escritura + destilación/cuarentena |
+| `docs/phase4-coverage-matrix.md` | Matriz de cobertura de 20 rutas + niveles de verificación |
+| `docs/phase5-librarian.md` | Carril de handoff del bibliotecario Letta (curación single-writer) |
+| `docs/phase6-remote.md` | Traslado del almacén canónico a sov + acceso ssh stdio-MCP |
+| `docs/onboarding.md` | **Procedimiento de incorporación de nuevos agentes (5 min)** |
+| `docs/handoff-tailscale-connectivity.md` | Problema de conectividad del almacén (Tailscale/LAN) + prompt de handoff con fallback automático |
+
+## Comandos clave
+
+```sh
+node scripts/inject-context.mjs [--cwd <dir>]        # imprime el bloque de contexto compartido
+node scripts/record-fact.mjs --type decision "..."   # registro explícito (secretos bloqueados con exit 3)
+node scripts/distill-session.mjs --file <transcript> # destila una sesión + barrido de cuarentena
+node scripts/librarian-sync.mjs [--strict]           # entrega outbox → inbox del bibliotecario en sov (Phase 5)
+node scripts/doctor.mjs                              # autocomprobación del cableado
+node scripts/cross-verify.mjs                        # re-ejecuta la matriz de cobertura de 20 rutas
+node scripts/reexplain.mjs log|report                # métricas de re-explicación (indicador auxiliar de la puerta de 2 semanas)
+node --test 'tests/*.test.mjs'                       # suite completa de tests (73)
+```
+
+## Puerta de uso real de 2 semanas (en curso)
+
+Todos los tests de escenario pasan. La aceptación final la juzga el usuario: **¿desaparece la sensación de "explicarlo otra vez" tras 2 semanas de uso real?** Cada vez que ocurra una re-explicación, regístrala con `reexplain.mjs log`; tras 2 semanas, comprueba si la tendencia semanal de `report` converge a cero.
