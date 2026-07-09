@@ -2,9 +2,15 @@
 
 [English](README.md) | **한국어** | [中文](README.zh-CN.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
-여러 AI 에이전트(claude code, codex, hermes, gajaecode, lettacode, …)의 컨텍스트/메모리를 하나의 로컬 공유 저장소로 통합하는 v1 시스템.
+모든 새 AI 채팅은 기억상실에서 시작한다. 어제 Claude에게 README는 영어가 기본이라고
+말했는데, 오늘 아침엔 Codex가 묻는다. 오늘 밤엔 세 번째 에이전트가 또 물을 것이다.
+다섯 개의 AI 에이전트를 쓰지만, 그들이 공유하는 유일한 기억은 당신뿐이다 —
+당신은 자신을 재설명 한 번에 하나씩 소모하고 있다.
 
-**목표 한 줄:** 어느 에이전트에서 정한 결정·선호도 재설명 없이 모든 에이전트의 새 세션에 이어진다.
+**Unified Agent Context가 그것을 끝낸다.** 어떤 에이전트에게든 결정을 한 번만
+말하라 — claude code, codex, hermes, gajaecode, lettacode — 다른 모든 에이전트가
+바로 다음 세션에서 그것을 알고 있다. 자동으로, 모든 기기에서, 비밀 정보는
+설계 단계부터 차단된 채로.
 
 ## 아키텍처 (정본 = store-host, 기기 독립 접근)
 

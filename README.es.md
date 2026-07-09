@@ -2,9 +2,16 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh-CN.md) | [日本語](README.ja.md) | **Español**
 
-Un sistema v1 que unifica el contexto/memoria de múltiples agentes de IA (claude code, codex, hermes, gajaecode, lettacode, …) en un único almacén local compartido.
+Cada nuevo chat con una IA empieza con amnesia. Ayer le dijiste a Claude que
+prefieres los README en inglés. Esta mañana lo preguntó Codex. Esta noche lo
+volverá a preguntar un tercer asistente. Usas cinco agentes de IA, y la única
+memoria que comparten eres tú — y te estás gastando a ti mismo, una
+re-explicación a la vez.
 
-**Objetivo en una línea:** las decisiones y preferencias tomadas en cualquier agente se trasladan a cada nueva sesión de todos los agentes — sin volver a explicarlas.
+**Unified Agent Context acaba con eso.** Dile una decisión a cualquier agente
+una sola vez — claude code, codex, hermes, gajaecode, lettacode — y todos los
+demás la sabrán en su próxima sesión. Automáticamente, en todas tus máquinas,
+con los secretos bloqueados por diseño.
 
 ## Arquitectura (almacén canónico = store-host, acceso independiente del dispositivo)
 
