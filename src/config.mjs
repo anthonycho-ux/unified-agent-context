@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -27,9 +28,72 @@ export function resolveProjectId(cwd = process.cwd()) {
   return path.basename(absoluteCwd);
 }
 
-export const SERVER_SPEC = {
-  command: 'node',
-  // UAC_SERVER_ENTRY: 테스트/교체용 서버 엔트리 오버라이드 (MCP 표준 스폰 스펙만 노출 — P3 결합 금지 유지).
-  args: [process.env.UAC_SERVER_ENTRY ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js')],
-  env: { DATA_DIR },
-};
+/**
+ * 스토어 위치 해석 (Phase 6 — 기기 독립 접근).
+ *
+ * 우선순위:
+ * 1. UAC_SERVER_ENTRY / UAC_DATA_DIR (테스트·명시 오버라이드) → 로컬 스폰
+ * 2. UAC_REMOTE=0 → 로컬 스폰 (탈출구)
+ * 3. uac.config.json의 store 블록:
+ *    - host가 'local'이면 해당 dataDir로 로컬 스폰 (정본 보유 기기 = sov)
+ *    - host가 원격이면 ssh 너머 stdio-MCP 스폰 (Tailscale ssh 키 재사용, 신규 인증 없음)
+ * 4. 아무것도 없으면 레거시 로컬 스폰
+ */
+function resolveServerSpec() {
+  const localEntry = process.env.UAC_SERVER_ENTRY ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
+  const localSpec = { command: 'node', args: [localEntry], env: { DATA_DIR } };
+
+  if (process.env.UAC_SERVER_ENTRY || process.env.UAC_DATA_DIR || process.env.UAC_REMOTE === '0') {
+    return [localSpec];
+  }
+
+  let cfg;
+  try {
+    cfg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'uac.config.json'), 'utf8'));
+  } catch {
+    return [localSpec];
+  }
+
+  const store = cfg?.store;
+  if (!store?.entry || !store?.dataDir) {
+    return [localSpec];
+  }
+
+  const localStoreSpec = { command: 'node', args: [store.entry], env: { DATA_DIR: store.dataDir } };
+
+  // 명시 오버라이드: UAC_STORE_HOST가 있으면 그 호스트만 사용 (폴백 없음).
+  const overrideHost = process.env.UAC_STORE_HOST;
+  if (overrideHost) {
+    return overrideHost === 'local' ? [localStoreSpec] : [sshSpec(overrideHost, store)];
+  }
+
+  if (!store.host || store.host === 'local') {
+    return [localStoreSpec];
+  }
+
+  // 우선순위: store.host → store.fallbackHosts[] (첫 연결 성공을 사용).
+  // Tailscale이 켜져 있는 경우가 많아 sov-ts를 우선하고 LAN sov를 폴백으로 두면,
+  // Tailscale on/off 상태와 무관하게 기록이 실패하지 않는다.
+  const hosts = [store.host, ...(Array.isArray(store.fallbackHosts) ? store.fallbackHosts : [])]
+    .filter((h, i, arr) => h && h !== 'local' && arr.indexOf(h) === i);
+  return hosts.map((h) => sshSpec(h, store));
+}
+
+// 원격 sov 스토어에 ssh 너머 stdio-MCP를 스폰하는 스펙 한 개.
+function sshSpec(host, store) {
+  return {
+    command: 'ssh',
+    args: [
+      '-o', 'BatchMode=yes',
+      '-o', 'ConnectTimeout=10',
+      host,
+      `DATA_DIR='${store.dataDir}' exec node '${store.entry}'`,
+    ],
+    env: {},
+  };
+}
+
+// 후보 스펙 목록 (우선순위 순). 첫 성공 연결을 store-adapter가 사용한다.
+export const SERVER_SPECS = resolveServerSpec();
+// 하위 호환: 단일 스펙 소비자를 위해 최우선 후보를 그대로 노출한다.
+export const SERVER_SPEC = SERVER_SPECS[0];
