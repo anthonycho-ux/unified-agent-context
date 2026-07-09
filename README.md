@@ -11,6 +11,10 @@ You are spending yourself one re-explanation at a time.
 other agent knows it in its very next session. Automatically, on every
 machine, with secrets locked out by design.
 
+You never wire memory together by hand. You never copy context from one agent
+to another. That is the whole promise. If you ever have to do it yourself, UAC
+has failed.
+
 ![UAC in 27 seconds](artifacts/promo/uac-promo.gif)
 
 ## How it works
