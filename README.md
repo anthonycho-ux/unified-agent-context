@@ -1,54 +1,57 @@
 # Unified Agent Context
 
-여러 AI 에이전트(claude code, codex, hermes, gajaecode, lettacode, …)의 컨텍스트/메모리를 하나의 로컬 공유 저장소로 통합하는 v1 시스템.
+**English** | [한국어](README.ko.md)
 
-**목표 한 줄:** 어느 에이전트에서 정한 결정·선호도 재설명 없이 모든 에이전트의 새 세션에 이어진다.
+A v1 system that unifies the context/memory of multiple AI agents (claude code, codex, hermes, gajaecode, lettacode, …) into a single shared local store.
 
-## 아키텍처 (정본 = sov, 기기 독립 접근)
+**One-line goal:** decisions and preferences made in any agent carry over to every agent's new session — without re-explaining.
+
+## Architecture (canonical store = sov, device-independent access)
 
 ```
-에이전트들 ──(MCP stdio, 원격이면 ssh 경유)──► mcp-memory-keeper (정본: sov ~/.uac/data/memory)
+Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canonical: sov ~/.uac/data/memory)
    │  ▲
-   │  └─ 세션 시작: 증류된 사실만 주입 (훅 또는 지시 pull) — scripts/inject-context.mjs
-   └──── 세션 중 명시 기록 (record-fact) / 종료 자동 증류 (distill-session)
-              └─ 모든 저장 경로는 중앙 fail-closed 비밀 게이트 경유 (차단 or redact)
-              └─ 영구 팩트는 사서 outbox 큐잉 → librarian-sync가 sov Letta "The Noticer" inbox로 배달 (Phase 5)
+   │  └─ Session start: inject distilled facts only (hook or instructed pull) — scripts/inject-context.mjs
+   └──── During session: explicit record (record-fact) / on exit: auto-distill (distill-session)
+              └─ Every write path goes through a central fail-closed secret gate (block or redact)
+              └─ Permanent facts queue into the librarian outbox → librarian-sync delivers to the
+                 sov Letta "The Noticer" inbox (Phase 5)
 ```
 
-- 스코프: `global`(선호) vs `project:<git-root-basename>`(결정/작업 상태) — 프로젝트 간 누출 차단 (서버 쿼리 강제)
-- TTL: decision/preference 영구 보존, project_state 90일
-- 원본 대화는 콜드 아카이브만 (주입 금지, 비밀은 redact-only)
-- degraded mode: 서버 부재 시 warning/log/health/metric 4증거 방출, `UAC_STRICT=1`이면 실패 처리
-- 기기 독립: 정본 스토어는 sov — Mac 등 다른 기기는 `uac.config.json`의 ssh 스폰으로 접근 (Phase 6)
-- v2 예정: 오프라인 로컬 큐 + 재동기화 / 셀프호스팅 원격 MCP + 인증 → claude.ai 합류
+- Scopes: `global` (preferences) vs `project:<git-root-basename>` (decisions/work state) — cross-project leakage blocked (enforced by server-side queries)
+- TTL: decision/preference kept permanently, project_state 90 days
+- Raw conversations go to cold archive only (never injected; secrets are redact-only)
+- Degraded mode: when the server is unreachable, emit 4 evidences (warning/log/health/metric); `UAC_STRICT=1` turns it into a hard failure
+- Device independence: the canonical store lives on sov — other machines (e.g. the Mac) reach it via ssh spawn configured in `uac.config.json` (Phase 6)
+- Planned for v2: offline local queue + resync / self-hosted remote MCP + auth → claude.ai joining
 
-## 문서
+## Documentation
 
-| 문서 | 내용 |
-|------|------|
-| `docs/phase0-comparison.md` | 저장소 후보 대조표 + 채택 근거 |
-| `docs/phase1-storage.md` | 스키마/스코프/TTL/비밀 게이트 |
-| `docs/phase2-hooks.md` | 하네스 5종 배선 + degraded mode |
-| `docs/phase3-write-paths.md` | 기록 경로 5종 + 증류/검역 |
-| `docs/phase4-coverage-matrix.md` | 20경로 커버리지 매트릭스 + 검증 계층 |
-| `docs/phase5-librarian.md` | Letta 사서 handoff lane (single-writer 큐레이션) |
-| `docs/phase6-remote.md` | 정본 스토어 sov 이전 + ssh stdio-MCP 접근 |
-| `docs/onboarding.md` | **신규 에이전트 합류 절차 (5분)** |
-| `docs/handoff-tailscale-connectivity.md` | 스토어 연결(Tailscale/LAN) 이슈 + 자동 폴백 핸드오프 프롬프트 |
+| Doc | Contents |
+|-----|----------|
+| `docs/phase0-comparison.md` | Store candidate comparison + adoption rationale |
+| `docs/phase1-storage.md` | Schema / scopes / TTL / secret gate |
+| `docs/phase2-hooks.md` | Wiring for the 5 harnesses + degraded mode |
+| `docs/phase3-write-paths.md` | The 5 write paths + distillation/quarantine |
+| `docs/phase4-coverage-matrix.md` | 20-path coverage matrix + verification tiers |
+| `docs/phase5-librarian.md` | Letta librarian handoff lane (single-writer curation) |
+| `docs/phase6-remote.md` | Canonical store move to sov + ssh stdio-MCP access |
+| `docs/onboarding.md` | **New-agent onboarding procedure (5 min)** |
+| `docs/handoff-tailscale-connectivity.md` | Store connectivity (Tailscale/LAN) issue + auto-fallback handoff prompt |
 
-## 주요 커맨드
+## Key commands
 
 ```sh
-node scripts/inject-context.mjs [--cwd <dir>]        # 공유 컨텍스트 블록 출력
-node scripts/record-fact.mjs --type decision "..."   # 명시 기록 (비밀은 exit 3 차단)
-node scripts/distill-session.mjs --file <transcript> # 세션 증류 + 검역 스윕
-node scripts/librarian-sync.mjs [--strict]           # outbox → sov 사서 inbox 배달 (Phase 5)
-node scripts/doctor.mjs                              # 배선 자가진단
-node scripts/cross-verify.mjs                        # 20경로 커버리지 매트릭스 재실행
-node scripts/reexplain.mjs log|report                # 재설명 계측 (2주 관문 보조지표)
-node --test 'tests/*.test.mjs'                       # 전체 테스트 (73)
+node scripts/inject-context.mjs [--cwd <dir>]        # print the shared context block
+node scripts/record-fact.mjs --type decision "..."   # explicit record (secrets blocked with exit 3)
+node scripts/distill-session.mjs --file <transcript> # distill a session + quarantine sweep
+node scripts/librarian-sync.mjs [--strict]           # deliver outbox → sov librarian inbox (Phase 5)
+node scripts/doctor.mjs                              # wiring self-check
+node scripts/cross-verify.mjs                        # re-run the 20-path coverage matrix
+node scripts/reexplain.mjs log|report                # re-explanation metrics (2-week gate aux indicator)
+node --test 'tests/*.test.mjs'                       # full test suite (73)
 ```
 
-## 2주 실사용 관문 (진행 중)
+## 2-week real-use gate (in progress)
 
-시나리오 테스트는 전부 통과 상태. 최종 합격은 **2주 실사용에서 "다시 설명하는" 체감이 사라졌는지** 사용자 확인으로 판정한다. 재설명이 발생할 때마다 `reexplain.mjs log`로 기록하고, 2주 후 `report`의 주간 추이가 0에 수렴하는지 본다.
+All scenario tests pass. Final acceptance is judged by the user: **does the feeling of "explaining things again" disappear over 2 weeks of real use?** Every time a re-explanation happens, log it with `reexplain.mjs log`; after 2 weeks, check whether the weekly trend in `report` converges to zero.
