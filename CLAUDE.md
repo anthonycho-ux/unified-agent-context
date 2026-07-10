@@ -27,6 +27,10 @@ tries candidate hosts in priority order (`store-host-ts` → `store-host`) and u
 **Full context + troubleshooting + a paste-ready handoff prompt:**
 see **`docs/handoff-tailscale-connectivity.md`**.
 
+**Active handoff (agent flavor adapters):** standardize shared facts while
+keeping each agent's voice local — design + implementation brief in
+**`docs/handoff-agent-flavor-adapters.md`**.
+
 ## Guardrails
 - Tests must never SSH (keep the `UAC_SERVER_ENTRY` / `UAC_DATA_DIR` / `UAC_REMOTE=0`
   local-spec escape hatches intact).
