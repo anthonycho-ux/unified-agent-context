@@ -6,7 +6,7 @@
 
 - 공유 메모리 서버(스토어): `node <repo>/node_modules/mcp-memory-keeper/dist/index.js`
 - 필수 환경변수: `DATA_DIR=<repo>/data/memory`
-- 주입 커맨드: `node <repo>/scripts/inject-context.mjs [--cwd <dir>]`
+- 주입 커맨드: `node <repo>/scripts/inject-context.mjs [--agent <id>] [--cwd <dir>]`
 - 명시 기록: `node <repo>/scripts/record-fact.mjs --type decision|preference "<문장>"`
 - 스코프 규약: 전역 선호 = channel `global`, 프로젝트 결정 = channel `project:<git-root-basename>`
 - 금지: API 키/토큰/자격증명을 공유 메모리에 저장하지 않는다 (게이트가 차단하지만 원칙으로도 금지)
@@ -30,7 +30,7 @@
 하네스가 지원하는 방식 하나를 택한다:
 
 **A. 세션 시작 훅 지원 시** — 훅에서 주입 커맨드를 실행하고 stdout을 컨텍스트에 추가:
-- claude code: `~/.claude/settings.json` → `hooks.SessionStart[].hooks[] = {type:"command", command:"node .../inject-context.mjs"}`
+- claude code: `~/.claude/settings.json` → `hooks.SessionStart[].hooks[] = {type:"command", command:"node .../inject-context.mjs --agent claude-code"}`
 - hermes: `~/.hermes/config.yaml` → `hooks.pre_llm_call[].command = ".../scripts/hermes-pre-llm-hook.sh"` (첫 턴에만 주입; 최초 1회 동의 프롬프트 발생)
 
 **B. 훅 미지원 시 (지시 기반 pull)** — 에이전트의 전역 지시 파일에 다음 지시를 추가:
@@ -49,7 +49,7 @@
 export UAC_HOME="$PWD"
 
 # (a) 주입 확인 — 전역 선호가 보이면 성공
-node "$UAC_HOME/scripts/inject-context.mjs" --cwd <아무 프로젝트>
+node "$UAC_HOME/scripts/inject-context.mjs" --agent generic --cwd <아무 프로젝트>
 # (b) 기록 왕복 — RECORDED 출력 확인 후 (a) 재실행 시 새 사실 포함
 node "$UAC_HOME/scripts/record-fact.mjs" --type decision --scope project:onboard-test "온보딩 검증 결정"
 # (c) 배선 자가진단

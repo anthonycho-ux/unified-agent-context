@@ -68,6 +68,7 @@ Fact (store): `preference: action-first replies`
 
 ### Phase A — contract (docs + schema, no behavior break)
 1. Document the fact-vs-voice split and neutral-claim rules in `docs/` (this file can become the design source; add a short pointer from README or phase docs).
+   Keep/extend `docs/tutorial.md` as the human "how do I use this when it works" guide (distinct from `onboarding.md` agent-wiring).
 2. Define agent ids + relevance tags (e.g. fact metadata `tags: ["browser","coding","infra"]` or infer from type/scope). Prefer the minimal extension that doesn't break existing store rows.
 
 ### Phase B — adapter skeleton
@@ -85,6 +86,7 @@ Fact (store): `preference: action-first replies`
 3. Do not require store-host if tests use local escape hatches (`UAC_REMOTE=0` / `UAC_SERVER_ENTRY` / `UAC_DATA_DIR`).
 
 ## Acceptance criteria
+- [ ] Human day-to-day tutorial in `docs/tutorial.md` (and README docs table pointer)
 - [ ] Design written into repo docs (not only chat memory)
 - [ ] `inject-context.mjs --agent <id>` works for ≥2 agents + generic default
 - [ ] Same underlying facts → different renderings

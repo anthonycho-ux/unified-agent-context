@@ -4,6 +4,7 @@ import process from 'node:process';
 
 import { ContextStore } from './store-adapter.mjs';
 import { resolveProjectId } from './config.mjs';
+import { normalizeAgentId, renderContextBlock, relevantFactsForAgent } from './render-adapters.mjs';
 
 const REPO_ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 
@@ -46,24 +47,6 @@ async function bumpMetrics(fields) {
   return metrics;
 }
 
-function renderBlock(projectScope, globalFacts, projectFacts) {
-  const lines = ['## 공유 컨텍스트 (unified-agent-context)', ''];
-  if (globalFacts.length === 0 && projectFacts.length === 0) {
-    lines.push('_아직 공유된 사실이 없습니다. 중요한 결정/선호는 공유 메모리에 기록하세요._');
-    return lines.join('\n');
-  }
-  if (globalFacts.length > 0) {
-    lines.push('### 전역 선호');
-    for (const f of globalFacts) lines.push(`- ${f.statement}`);
-    lines.push('');
-  }
-  if (projectFacts.length > 0) {
-    lines.push(`### 프로젝트 컨텍스트 (${projectScope})`);
-    for (const f of projectFacts) lines.push(`- [${f.fact_type}] ${f.statement}`);
-  }
-  return lines.join('\n').trimEnd();
-}
-
 async function degrade(reason, projectId) {
   process.stderr.write(`[uac-injector] DEGRADED: ${reason}\n`);
   const ts = new Date().toISOString();
@@ -76,7 +59,8 @@ async function degrade(reason, projectId) {
   return { block: '', facts: [], degraded: true, reason };
 }
 
-export async function getInjectionBlock({ cwd = process.cwd(), scope, store } = {}) {
+export async function getInjectionBlock({ cwd = process.cwd(), scope, agent = 'generic', store } = {}) {
+  const agentId = normalizeAgentId(agent);
   const projectId = scope?.startsWith('project:') ? scope.slice('project:'.length) : resolveProjectId(cwd);
   const projectScope = scope === 'global' ? null : `project:${projectId}`;
 
@@ -88,9 +72,12 @@ export async function getInjectionBlock({ cwd = process.cwd(), scope, store } = 
     const ts = new Date().toISOString();
     await writeHealth({ status: 'ok', ts });
     await bumpMetrics(['inject_count']);
+    const allFacts = [...globalFacts, ...projectFacts];
     return {
-      block: renderBlock(projectScope ?? 'global', globalFacts, projectFacts),
-      facts: [...globalFacts, ...projectFacts],
+      block: renderContextBlock({ agentId, projectScope: projectScope ?? 'global', globalFacts, projectFacts }),
+      facts: relevantFactsForAgent(agentId, allFacts),
+      allFacts,
+      agent: agentId,
       degraded: false,
     };
   } catch (error) {

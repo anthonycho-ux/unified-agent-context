@@ -13,6 +13,11 @@
 | `dedupe_key` | `string` | `sha256(statement + scope).slice(0, 16)`. 같은 키 저장은 갱신으로 취급한다. |
 | `retention_class` | `"permanent" \| "days90" \| "days180"` | `fact_type` 기본값에서 파생, pruning 판단에 사용. |
 | `sensitivity_class` | `"normal" \| "sensitive"` | 저장 허용 민감도. 실제 비밀은 저장하지 않는다. |
+| `tags` | `string[]` (optional) | 에이전트별 주입 relevance 필터 힌트. 없으면 모든 에이전트에 관련 있는 legacy fact로 취급한다. |
+
+`tags`는 소문자 영문으로 시작하는 `a-z`, 숫자, `_`, `-` 조합이다. 예: `coding`, `git`,
+`browser`, `status`, `infra`. 태그는 사실의 내용을 바꾸지 않는 메타데이터이며, 렌더러가
+어떤 에이전트에 보여줄지 판단할 때만 사용한다.
 
 ## 스코프 규약
 
@@ -22,6 +27,18 @@
 | `project:<id>` | 프로젝트 결정, 프로젝트 상태 | `project:<id>` |
 
 Phase 1 검증에서 `project:alpha` 형식의 콜론 포함 채널이 실제 서버 필터로 동작함을 확인한다. 따라서 v1 규약은 `project:<id>`를 그대로 사용한다. 추후 서버가 콜론을 거부하는 버전으로 바뀌면 `project--<id>`로만 폴백하고 이 문서를 함께 갱신한다.
+
+## 중립 사실 규약
+
+공유 스토어에는 에이전트 목소리나 페르소나가 아니라 **중립 사실**만 저장한다.
+
+- 좋은 예: `the user wants action-first replies.`
+- 좋은 예: `This project uses node:test for the test suite.`
+- 나쁜 예: `You must always write in Claude's voice.`
+- 나쁜 예: `Aside should show **DECIDE:** on every response.`
+
+충돌 규칙은 단순하다: **facts shared store wins; style local wins.** 사실/결정/선호는
+UAC 스토어가 기준이고, 말투/도구 관용구/페르소나는 각 에이전트의 로컬 파일이 기준이다.
 
 ## TTL 기본값
 

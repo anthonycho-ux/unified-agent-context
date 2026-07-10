@@ -26,6 +26,11 @@ describe('validateFact', () => {
     assert.ok(!('extra_field' in fact));
   });
 
+  test('accepts optional relevance tags and normalizes order/deduplication', () => {
+    const fact = validateFact({ ...VALID, tags: ['git', 'coding', 'git'] });
+    assert.deepEqual(fact.tags, ['coding', 'git']);
+  });
+
   test('rejects invalid fact_type enum', () => {
     assert.throws(
       () => validateFact({ ...VALID, fact_type: 'opinion' }),
@@ -61,6 +66,13 @@ describe('validateFact', () => {
   test('rejects non-object input', () => {
     assert.throws(() => validateFact(null), SchemaError);
     assert.throws(() => validateFact('fact'), SchemaError);
+  });
+
+  test('rejects malformed tags', () => {
+    assert.throws(
+      () => validateFact({ ...VALID, tags: ['Coding'] }),
+      (err) => err instanceof SchemaError && err.issues.some((i) => i.path === 'tags.0'),
+    );
   });
 });
 
