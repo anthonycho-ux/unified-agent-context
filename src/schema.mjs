@@ -11,6 +11,7 @@ export const RETENTION_BY_FACT_TYPE = Object.freeze({
 const FACT_TYPES = new Set(['decision', 'preference', 'project_state']);
 const RETENTION_CLASSES = new Set(['permanent', 'days90', 'days180']);
 const SENSITIVITY_CLASSES = new Set(['normal', 'sensitive']);
+const TAG_PATTERN = /^[a-z][a-z0-9_-]{0,31}$/;
 
 export class SchemaError extends Error {
   constructor(issues) {
@@ -105,11 +106,23 @@ export function validateFact(obj) {
     issues.push({ path: 'sensitivity_class', message: 'must be normal or sensitive' });
   }
 
+  if ('tags' in obj) {
+    if (!Array.isArray(obj.tags)) {
+      issues.push({ path: 'tags', message: 'must be an array of tag strings' });
+    } else {
+      for (const [index, tag] of obj.tags.entries()) {
+        if (typeof tag !== 'string' || !TAG_PATTERN.test(tag)) {
+          issues.push({ path: `tags.${index}`, message: 'must match /^[a-z][a-z0-9_-]{0,31}$/' });
+        }
+      }
+    }
+  }
+
   if (issues.length > 0) {
     throw new SchemaError(issues);
   }
 
-  return {
+  const normalized = {
     statement: obj.statement,
     fact_type: obj.fact_type,
     scope: obj.scope,
@@ -120,6 +133,12 @@ export function validateFact(obj) {
     retention_class: obj.retention_class,
     sensitivity_class: obj.sensitivity_class,
   };
+
+  if (Array.isArray(obj.tags) && obj.tags.length > 0) {
+    normalized.tags = [...new Set(obj.tags)].sort();
+  }
+
+  return normalized;
 }
 
 export function makeFact(partial) {

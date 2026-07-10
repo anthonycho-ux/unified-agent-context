@@ -50,13 +50,15 @@ In plain words.
 | `docs/phase4-coverage-matrix.md` | Twenty delivery paths, tested and verified. |
 | `docs/phase5-librarian.md` | The librarian lane that curates permanent facts. |
 | `docs/phase6-remote.md` | Moving the main store to sov, and reaching it over ssh. |
+| `docs/agent-flavor-adapters.md` | How shared facts stay neutral while each agent renders them in its own dialect. |
 | `docs/onboarding.md` | How a new agent joins in five minutes. |
+| `docs/tutorial.md` | Day-to-day human guide: record once, inject by agent flavor, re-explain metrics. |
 | `docs/handoff-tailscale-connectivity.md` | What to do when the store connection flakes. |
 
 ## The commands
 
 ```sh
-node scripts/inject-context.mjs [--cwd <dir>]        # print the shared context block
+node scripts/inject-context.mjs [--agent <id>] [--cwd <dir>] # print an agent-flavored shared context block
 node scripts/record-fact.mjs --type decision "..."   # explicit record (secrets blocked with exit 3)
 node scripts/distill-session.mjs --file <transcript> # distill a session + quarantine sweep
 node scripts/librarian-sync.mjs [--strict]           # deliver outbox → sov librarian inbox (Phase 5)

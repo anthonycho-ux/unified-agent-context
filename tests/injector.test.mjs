@@ -40,6 +40,8 @@ test.before(async () => {
     await store.storeFact(makeFact({ statement: '모든 답변은 한국어로 한다', fact_type: 'preference', scope: 'global', source_ref: 'test' }));
     await store.storeFact(makeFact({ statement: 'DB는 Postgres로 전환한다', fact_type: 'decision', scope: 'project:alpha', source_ref: 'test' }));
     await store.storeFact(makeFact({ statement: 'beta 전용 비밀 아님 결정', fact_type: 'decision', scope: 'project:beta', source_ref: 'test' }));
+    await store.storeFact(makeFact({ statement: '브라우저 세션은 Aside에서 확인한다', fact_type: 'project_state', scope: 'project:alpha', source_ref: 'test', tags: ['browser'] }));
+    await store.storeFact(makeFact({ statement: '커밋은 관련 파일만 포함한다', fact_type: 'preference', scope: 'global', source_ref: 'test', tags: ['git'] }));
   } finally {
     await store.close();
   }
@@ -63,6 +65,47 @@ test('주입 성공: 전역 선호 + 해당 프로젝트 사실 포함, 타 프�
   }
   const health = JSON.parse(await fs.readFile(healthPath, 'utf8'));
   assert.equal(health.status, 'ok');
+});
+
+test('기본 generic 주입은 tagged fact까지 포함하는 기존 공유 블록을 유지한다', async () => {
+  const store = await ContextStore.connect(serverSpec);
+  try {
+    const result = await getInjectionBlock({ scope: 'project:alpha', store });
+    assert.equal(result.agent, 'generic');
+    assert.match(result.block, /공유 컨텍스트/);
+    assert.match(result.block, /브라우저 세션은 Aside에서 확인한다/);
+    assert.match(result.block, /커밋은 관련 파일만 포함한다/);
+  } finally {
+    await store.close();
+  }
+});
+
+test('claude-code adapter는 coding/git 사실을 포함하고 browser-only 사실을 제외한다', async () => {
+  const store = await ContextStore.connect(serverSpec);
+  try {
+    const result = await getInjectionBlock({ agent: 'claude-code', scope: 'project:alpha', store });
+    assert.equal(result.agent, 'claude-code');
+    assert.match(result.block, /UAC Shared Context for Claude Code/);
+    assert.match(result.block, /커밋은 관련 파일만 포함한다/);
+    assert.ok(!result.block.includes('브라우저 세션은 Aside에서 확인한다'), 'browser-only 사실은 coding agent에서 제외');
+    assert.ok(!result.facts.some((fact) => fact.statement.includes('브라우저 세션')));
+  } finally {
+    await store.close();
+  }
+});
+
+test('aside adapter는 browser 사실을 포함하고 git-only 사실을 제외한다', async () => {
+  const store = await ContextStore.connect(serverSpec);
+  try {
+    const result = await getInjectionBlock({ agent: 'aside', scope: 'project:alpha', store });
+    assert.equal(result.agent, 'aside');
+    assert.match(result.block, /UAC Shared Context for Aside/);
+    assert.match(result.block, /브라우저 세션은 Aside에서 확인한다/);
+    assert.ok(!result.block.includes('커밋은 관련 파일만 포함한다'), 'git-only 사실은 Aside에서 제외');
+    assert.ok(!result.facts.some((fact) => fact.statement.includes('커밋은 관련 파일만')));
+  } finally {
+    await store.close();
+  }
 });
 
 test('degraded mode: 서버 부재 시 4가지 증거(warning/log/health/metric) 전부 방출', async () => {
@@ -129,6 +172,15 @@ test('CLI wrapper: 정상 실행 시 블록을 stdout으로 출력하고 exit 0'
   assert.match(stdout, /공유 컨텍스트/);
   assert.match(stdout, /Postgres로 전환한다/);
   assert.ok(!stdout.includes('beta 전용'));
+});
+
+test('CLI wrapper: --agent aside는 Aside dialect로 출력한다', async () => {
+  const { stdout } = await execFileAsync('node', [path.join(repoRoot, 'scripts/inject-context.mjs'), '--agent', 'aside', '--scope', 'project:alpha'], {
+    env: { ...process.env, UAC_DATA_DIR: dataDir, UAC_LOG_PATH: logPath, UAC_HEALTH_PATH: healthPath, UAC_METRICS_PATH: metricsPath },
+  });
+  assert.match(stdout, /UAC Shared Context for Aside/);
+  assert.match(stdout, /브라우저 세션은 Aside에서 확인한다/);
+  assert.ok(!stdout.includes('커밋은 관련 파일만 포함한다'));
 });
 
 test('CLI wrapper: UAC_STRICT=1 + 죽은 서버는 exit 2', async () => {
