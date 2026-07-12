@@ -74,7 +74,7 @@ test('degraded mode: 서버 부재 시 4가지 증거(warning/log/health/metric)
   process.stderr.write = (chunk, ...rest) => { stderr2.push(String(chunk)); return origWrite(chunk, ...rest); };
   let degradedResult;
   try {
-    degradedResult = await getInjectionBlock({ scope: 'project:alpha', store: throwingStore });
+    degradedResult = await getInjectionBlock({ scope: 'project:alpha', store: throwingStore, localStore: throwingStore });
   } finally {
     process.stderr.write = origWrite;
   }
@@ -102,7 +102,7 @@ test('UAC_STRICT=1: degraded는 InjectorDegradedError로 실패 처리 (fallback
   const throwingStore = { getFacts: async () => { throw new Error('server down (strict)'); }, close: async () => {} };
   try {
     await assert.rejects(
-      () => getInjectionBlock({ scope: 'project:alpha', store: throwingStore }),
+      () => getInjectionBlock({ scope: 'project:alpha', store: throwingStore, localStore: throwingStore }),
       InjectorDegradedError,
     );
   } finally {

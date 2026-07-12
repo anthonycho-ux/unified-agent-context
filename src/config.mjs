@@ -92,6 +92,46 @@ function sshSpec(host, store) {
     env: {},
   };
 }
+export function localSpec({ dataDir = process.env.UAC_LOCAL_DATA_DIR ?? DATA_DIR } = {}) {
+  const localEntry = process.env.UAC_SERVER_ENTRY ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
+
+  return {
+    command: 'node',
+    args: [localEntry],
+    env: { DATA_DIR: dataDir },
+  };
+}
+
+export function sovSpecs() {
+  let cfg;
+  try {
+    cfg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'uac.config.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+
+  const store = cfg?.store;
+  if (!store?.entry || !store?.dataDir) {
+    return [];
+  }
+
+  const overrideHost = process.env.UAC_STORE_HOST;
+  if (overrideHost) {
+    return overrideHost === 'local' ? [] : [sshSpec(overrideHost, store)];
+  }
+
+  if (!store.host || store.host === 'local') {
+    return [];
+  }
+
+  const hosts = [store.host, ...(Array.isArray(store.fallbackHosts) ? store.fallbackHosts : [])]
+    .filter((host, index, allHosts) => host && host !== 'local' && allHosts.indexOf(host) === index);
+  return hosts.map((host) => sshSpec(host, store));
+}
+
+export function makeLocalSpec(dataDir) {
+  return localSpec({ dataDir });
+}
 
 // 후보 스펙 목록 (우선순위 순). 첫 성공 연결을 store-adapter가 사용한다.
 export const SERVER_SPECS = resolveServerSpec();
