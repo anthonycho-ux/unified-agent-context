@@ -9,6 +9,7 @@ import { queueForLibrarian } from './librarian.mjs';
 const TOOL_SAVE = 'context_save';
 const TOOL_GET = 'context_get';
 const TOOL_SEARCH = 'context_search';
+const PAGE_LIMIT = 100;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const RETENTION_DAYS = {
@@ -41,6 +42,60 @@ function parseItems(result) {
   } catch (error) {
     console.warn(`memory-keeper 응답을 JSON으로 해석하지 못해 건너뜁니다: ${error.message}`);
     return [];
+  }
+}
+function paginationFromResult(result) {
+  const text = firstText(result).trim();
+
+  if (!text || text.startsWith('No matching context found') || text.startsWith('No results found')) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+    return parsed?.pagination && typeof parsed.pagination === 'object' ? parsed.pagination : {};
+  } catch {
+    return {};
+  }
+}
+
+function nextPageOffset(result, offset, itemCount) {
+  const pagination = paginationFromResult(result);
+  if (itemCount === 0 || itemCount < PAGE_LIMIT || pagination.hasMore === false) {
+    return null;
+  }
+
+  const nextOffset = Number.isInteger(pagination.nextOffset)
+    ? pagination.nextOffset
+    : offset + PAGE_LIMIT;
+  if (nextOffset <= offset) {
+    console.warn(`context_get pagination offset did not advance (${offset} -> ${nextOffset}); stopping.`);
+    return null;
+  }
+
+  return nextOffset;
+}
+
+async function getItemsPaged(store, { scope } = {}) {
+  const items = [];
+  let offset = 0;
+
+  while (true) {
+    const result = await store.callTool(TOOL_GET, {
+      channel: normalizeScope(scope),
+      includeMetadata: true,
+      limit: PAGE_LIMIT,
+      offset,
+    });
+    const pageItems = parseItems(result);
+    items.push(...pageItems);
+
+    const nextOffset = nextPageOffset(result, offset, pageItems.length);
+    if (nextOffset === null) {
+      return items;
+    }
+
+    offset = nextOffset;
   }
 }
 
@@ -145,6 +200,25 @@ export class ContextStore {
 
     return normalized;
   }
+  async saveFactValidated(fact, { queueLibrarian = false } = {}) {
+    const normalized = validateFact(fact);
+
+    assertSafe(normalized.statement, 'distilled_fact');
+
+    await this.callTool(TOOL_SAVE, {
+      key: normalized.dedupe_key,
+      value: JSON.stringify(normalized),
+      category: normalized.fact_type,
+      channel: normalizeScope(normalized.scope),
+    });
+
+    if (queueLibrarian) {
+      await queueForLibrarian(normalized);
+    }
+
+    return normalized;
+  }
+
 
   async getFacts({ scope } = {}) {
     const result = await this.callTool(TOOL_GET, {
@@ -155,6 +229,10 @@ export class ContextStore {
 
     return factsFromItems(parseItems(result));
   }
+  async getFactsPaged({ scope } = {}) {
+    return factsFromItems(await getItemsPaged(this, { scope }));
+  }
+
 
   async searchFacts(query, { scope } = {}) {
     const result = await this.callTool(TOOL_SEARCH, {
@@ -185,6 +263,26 @@ export class ContextStore {
       category: item.category,
       channel: item.channel,
     }));
+  }
+  async getRawItemsPaged({ scope } = {}) {
+    return (await getItemsPaged(this, { scope })).map((item) => ({
+      key: item.key,
+      value: item.value,
+      category: item.category,
+      channel: item.channel,
+    }));
+  }
+
+  async getChannels() {
+    const channels = new Set();
+
+    for (const { channel } of await this.getRawItemsPaged()) {
+      if (typeof channel === 'string') {
+        channels.add(channel);
+      }
+    }
+
+    return [...channels];
   }
 
   /**

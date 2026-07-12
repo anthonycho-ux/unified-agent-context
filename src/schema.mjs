@@ -30,7 +30,7 @@ function isIsoDate(value) {
   return Number.isFinite(time) && new Date(time).toISOString() === value;
 }
 
-function dedupeKey(statement, scope) {
+export function dedupeKey(statement, scope) {
   return createHash('sha256').update(`${statement}${scope}`).digest('hex').slice(0, 16);
 }
 

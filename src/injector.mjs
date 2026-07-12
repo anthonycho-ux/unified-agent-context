@@ -3,7 +3,8 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { ContextStore } from './store-adapter.mjs';
-import { resolveProjectId } from './config.mjs';
+import { resolveProjectId, localSpec } from './config.mjs';
+import { unionFacts } from './merge.mjs';
 
 const REPO_ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 
@@ -76,29 +77,74 @@ async function degrade(reason, projectId) {
   return { block: '', facts: [], degraded: true, reason };
 }
 
-export async function getInjectionBlock({ cwd = process.cwd(), scope, store } = {}) {
+export async function getInjectionBlock({ cwd = process.cwd(), scope, store, sovStore, localStore } = {}) {
   const projectId = scope?.startsWith('project:') ? scope.slice('project:'.length) : resolveProjectId(cwd);
   const projectScope = scope === 'global' ? null : `project:${projectId}`;
 
-  let connected = store ?? null;
+  const readSource = (conn, sc) =>
+    typeof conn.getFactsPaged === 'function' ? conn.getFactsPaged({ scope: sc }) : conn.getFacts({ scope: sc });
+
+  // Open + read one source independently so a connect/read failure in one source
+  // (e.g. store-host unreachable when Tailscale is off) never aborts the other.
+  const openAndRead = async (injected, makeConn) => {
+    let conn = injected;
+    let created = false;
+    try {
+      if (!conn) {
+        conn = await makeConn();
+        created = true;
+      }
+      const globalFacts = await readSource(conn, 'global');
+      const projectFacts = projectScope ? await readSource(conn, projectScope) : [];
+      return { facts: [...globalFacts, ...projectFacts], conn, created };
+    } catch (error) {
+      return { facts: null, conn, created, error };
+    }
+  };
+
+  const [sovResult, localResult] = await Promise.all([
+    openAndRead(sovStore ?? store ?? null, () => ContextStore.connect()),
+    openAndRead(localStore ?? null, () => ContextStore.connect(localSpec())),
+  ]);
+
   try {
-    connected ??= await ContextStore.connect();
-    const globalFacts = await connected.getFacts({ scope: 'global' });
-    const projectFacts = projectScope ? await connected.getFacts({ scope: projectScope }) : [];
+    const sovFacts = sovResult.facts;
+    const localFacts = localResult.facts;
+
+    if (sovFacts === null && localFacts === null) {
+      const reason = `all sources failed: store-host=${sovResult.error?.message ?? sovResult.error}; local=${localResult.error?.message ?? localResult.error}`;
+      // degrade() throws InjectorDegradedError under UAC_STRICT; otherwise returns a degraded block.
+      return await degrade(reason, projectId);
+    }
+
+    const unioned = unionFacts(localFacts ?? [], sovFacts ?? []);
+    const globalFacts = unioned.filter((fact) => fact.scope === 'global');
+    const projectFacts = projectScope ? unioned.filter((fact) => fact.scope === projectScope) : [];
+
     const ts = new Date().toISOString();
-    await writeHealth({ status: 'ok', ts });
+    const partial = sovFacts === null || localFacts === null;
+    if (partial) {
+      const failed = sovFacts === null ? 'store-host' : 'local';
+      await writeHealth({ status: 'partial', ts, reason: `${failed} source unavailable` });
+    } else {
+      await writeHealth({ status: 'ok', ts });
+    }
     await bumpMetrics(['inject_count']);
+
     return {
       block: renderBlock(projectScope ?? 'global', globalFacts, projectFacts),
-      facts: [...globalFacts, ...projectFacts],
+      facts: unioned,
       degraded: false,
+      partial,
     };
   } catch (error) {
     if (error instanceof InjectorDegradedError) throw error;
     return degrade(error?.message ?? String(error), projectId);
   } finally {
-    if (!store && connected) {
-      await connected.close().catch(() => {});
+    for (const result of [sovResult, localResult]) {
+      if (result.created && result.conn) {
+        await result.conn.close().catch(() => {});
+      }
     }
   }
 }
