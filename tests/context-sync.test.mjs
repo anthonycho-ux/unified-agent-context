@@ -15,8 +15,8 @@ process.env.UAC_LIBRARIAN_DIR = librarianDir;
 
 const { ContextStore } = await import(pathToFileURL(path.join(srcDir, 'store-adapter.mjs')).href);
 const { makeLocalSpec } = await import(pathToFileURL(path.join(srcDir, 'config.mjs')).href);
-const { makeFact } = await import(pathToFileURL(path.join(srcDir, 'schema.mjs')).href);
-const { reconcile } = await import(pathToFileURL(path.join(scriptsDir, 'context-sync.mjs')).href);
+const { makeFact, dedupeKey } = await import(pathToFileURL(path.join(srcDir, 'schema.mjs')).href);
+const { reconcile, normalizeRawRow } = await import(pathToFileURL(path.join(scriptsDir, 'context-sync.mjs')).href);
 
 // Hard no-SSH guard: every store this suite spawns MUST be a local `node` server.
 function assertNodeSpec(spec) {
@@ -134,10 +134,11 @@ test('poison row is skipped but the rest of the cycle completes', async () => {
   await withStores(async ({ local, sov }) => {
     const good = decision('valid decision alongside poison', 'global');
     await local.storeFact(good);
-    // fact-category row whose key does not match its recomputed dedupe_key.
+    // A fact-category row whose value is a fact-shaped object with NO statement
+    // is genuinely unnormalizable and MUST stay a fail-closed skip under Option A.
     await local.callTool('context_save', {
-      key: 'tampered-key',
-      value: JSON.stringify(good),
+      key: 'poison-no-statement',
+      value: JSON.stringify({ fact_type: 'decision', detail: 'malformed: object without a statement' }),
       category: 'decision',
       channel: 'global',
     });
@@ -169,5 +170,145 @@ test('replication uses saveFactValidated and never queues the librarian', async 
     // Sanity check the observation: storeFact (the genuine-write path) DOES queue.
     await sov.storeFact(decision('genuine write publishes', 'global'));
     assert.ok((await countLines()) > before, 'storeFact should append to the librarian outbox');
+  });
+});
+// --- Option A: local→sov normalization of Claude Desktop-style raw rows ---
+
+// A Claude Desktop `context_save` row: fact intent, human-readable key that does
+// NOT match the recomputed dedupe_key, and missing every canonical field
+// (dedupe_key/timestamps/source_ref/retention_class/sensitivity_class).
+async function plantClaudeDesktopRow(store, { key, statement, factType = 'decision', scope = 'global', extra = {} } = {}) {
+  await store.callTool('context_save', {
+    key,
+    value: JSON.stringify({ statement, fact_type: factType, ...extra }),
+    category: factType,
+    channel: scope,
+  });
+}
+
+test('normalization (unit): a fact-intent row missing fields becomes a canonical fact', () => {
+  const result = normalizeRawRow(
+    {
+      key: 'human_readable_key',
+      value: JSON.stringify({ statement: 'Postgres is the primary datastore', fact_type: 'decision' }),
+      category: 'decision',
+      channel: 'global',
+      created_at: '2026-07-13 08:54:00',
+      updated_at: '2026-07-13 08:54:00',
+    },
+    'global',
+  );
+  assert.ok(result?.fact, 'row must normalize into a fact');
+  const fact = result.fact;
+  assert.equal(fact.dedupe_key, dedupeKey(fact.statement, fact.scope));
+  assert.equal(fact.source_ref, 'normalized:context_save');
+  assert.equal(fact.retention_class, 'permanent'); // RETENTION_BY_FACT_TYPE.decision
+  assert.equal(fact.sensitivity_class, 'normal');
+  assert.equal(fact.created_at, '2026-07-13T08:54:00.000Z');
+  assert.equal(fact.updated_at, '2026-07-13T08:54:00.000Z');
+});
+
+test('normalization (unit): non-fact rows are filtered (null), unnormalizable fact rows skip', () => {
+  // No fact intent → filtered, not counted.
+  assert.equal(normalizeRawRow({ key: 'k', value: JSON.stringify({ text: 'a note' }), category: 'note', channel: 'global' }, 'global'), null);
+  assert.equal(normalizeRawRow({ key: 'k', value: JSON.stringify({ progress: 50 }), category: 'progress', channel: 'global' }, 'global'), null);
+  // Fact intent (category) but no statement → fail-closed skip.
+  assert.deepEqual(
+    normalizeRawRow({ key: 'k', value: JSON.stringify({ fact_type: 'decision' }), category: 'decision', channel: 'global', created_at: '2026-07-13 08:54:00' }, 'global'),
+    { skip: true },
+  );
+  // A value that declares a valid fact_type promotes even a non-fact category.
+  const promoted = normalizeRawRow(
+    { key: 'k', value: JSON.stringify({ statement: 'promoted via declared fact_type', fact_type: 'preference' }), category: 'note', channel: 'global', created_at: '2026-07-13 08:54:00' },
+    'global',
+  );
+  assert.equal(promoted?.fact?.fact_type, 'preference');
+});
+
+test('normalization (unit): a secret in the statement is fail-closed skipped', () => {
+  const result = normalizeRawRow(
+    { key: 'k', value: JSON.stringify({ statement: 'token is sk-proj-abcdefghijklmnopqrstuvwxyz012345', fact_type: 'decision' }), category: 'decision', channel: 'global', created_at: '2026-07-13 08:54:00' },
+    'global',
+  );
+  assert.deepEqual(result, { skip: true });
+});
+
+test('normalization (e2e): a Claude Desktop-style row is normalized and pushed to sov', async () => {
+  await withStores(async ({ local, sov }) => {
+    const statement = 'the user approved Option A for reconcile normalization';
+    await plantClaudeDesktopRow(local, { key: 'anthony_option_a_20260712', statement });
+    const report = await reconcile({ localStore: local, sovStore: sov });
+    assert.equal(report.pushed, 1, 'the normalized fact must be pushed to sov');
+    assert.equal(report.failed, 0);
+
+    const sovFacts = await sov.getFacts({ scope: 'global' });
+    assert.equal(sovFacts.length, 1);
+    const fact = sovFacts[0];
+    assert.equal(fact.statement, statement);
+    assert.equal(fact.fact_type, 'decision');
+    assert.equal(fact.dedupe_key, dedupeKey(statement, 'global'));
+    assert.equal(fact.source_ref, 'normalized:context_save');
+    assert.equal(fact.retention_class, 'permanent');
+    assert.equal(fact.sensitivity_class, 'normal');
+    assert.ok(!Number.isNaN(Date.parse(fact.created_at)));
+    assert.ok(!Number.isNaN(Date.parse(fact.updated_at)));
+
+    // The sov row's key IS the recomputed dedupe_key (key === dedupe_key on the wire).
+    const sovRaw = await sov.getRawItems({ scope: 'global' });
+    assert.deepEqual(sovRaw.map((r) => r.key), [dedupeKey(statement, 'global')]);
+  });
+});
+
+test('normalization (e2e): re-running reconcile is idempotent (no oscillation)', async () => {
+  await withStores(async ({ local, sov }) => {
+    await plantClaudeDesktopRow(local, { key: 'idem_key', statement: 'normalized facts converge' });
+    const first = await reconcile({ localStore: local, sovStore: sov });
+    assert.equal(first.pushed, 1);
+    const second = await reconcile({ localStore: local, sovStore: sov });
+    assert.equal(second.pushed, 0, 'a normalized fact must not be re-pushed');
+    assert.equal(second.pulled, 0, 'and must not be pulled back to local');
+    assert.equal(second.failed, 0);
+  });
+});
+
+test('normalization (unit): a plain-text fact-category row uses the raw value as its statement', () => {
+  const value = 'Decision: enable avahi-daemon on sov so LAN ssh works without Tailscale.';
+  const result = normalizeRawRow(
+    { key: 'sov-lan-2026-07-12', value, category: 'decision', channel: 'global', created_at: '2026-07-12 19:50:33' },
+    'global',
+  );
+  assert.ok(result?.fact, 'plain-text decision row must normalize');
+  assert.equal(result.fact.statement, value);
+  assert.equal(result.fact.fact_type, 'decision');
+  assert.equal(result.fact.dedupe_key, dedupeKey(value, 'global'));
+  assert.equal(result.fact.source_ref, 'normalized:context_save');
+  assert.equal(result.fact.created_at, '2026-07-12T19:50:33.000Z');
+});
+
+test('normalization (unit): a plain-text NON-fact-category row is still filtered (null)', () => {
+  // A note whose value is plain text has no fact intent → filtered, not promoted.
+  assert.equal(
+    normalizeRawRow({ key: 'k', value: 'just a passing thought', category: 'note', channel: 'global', created_at: '2026-07-12 19:50:33' }, 'global'),
+    null,
+  );
+});
+
+test('normalization (e2e): a plain-text decision row is normalized and pushed to sov', async () => {
+  await withStores(async ({ local, sov }) => {
+    const statement = 'Route `ssh sov` over LAN first, Tailscale as fallback (verified 2026-07-11).';
+    await local.callTool('context_save', {
+      key: 'ssh_sov_auto_route_20260712',
+      value: statement, // bare string, exactly how the real stuck rows were saved
+      category: 'decision',
+      channel: 'project:<mac-user>',
+    });
+    const report = await reconcile({ localStore: local, sovStore: sov });
+    assert.equal(report.pushed, 1);
+    assert.equal(report.failed, 0);
+    const facts = await sov.getFacts({ scope: 'project:<mac-user>' });
+    assert.equal(facts.length, 1);
+    assert.equal(facts[0].statement, statement);
+    assert.equal(facts[0].dedupe_key, dedupeKey(statement, 'project:<mac-user>'));
+    assert.equal(facts[0].source_ref, 'normalized:context_save');
   });
 });
