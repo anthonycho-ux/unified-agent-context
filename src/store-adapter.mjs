@@ -247,8 +247,10 @@ export class ContextStore {
   }
 
   /**
-   * 채널의 raw row를 그대로 반환한다 (검역 스윕용).
-   * DistilledFact 파싱/검증 없이 {key, value, category} 수준으로 노출.
+   * 채널의 raw row를 그대로 반환한다 (검역 스윕 + reconcile 정규화용).
+   * DistilledFact 파싱/검증 없이 {key, value, category, channel, created_at, updated_at}
+   * 수준으로 노출한다. created_at/updated_at은 스토어 메타데이터(SQLite 포맷)이며
+   * reconcile 정규화가 결정론적 타임스탬프 출처로 사용한다.
    */
   async getRawItems({ scope } = {}) {
     const result = await this.callTool(TOOL_GET, {
@@ -262,6 +264,8 @@ export class ContextStore {
       value: item.value,
       category: item.category,
       channel: item.channel,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
     }));
   }
   async getRawItemsPaged({ scope } = {}) {
@@ -270,6 +274,8 @@ export class ContextStore {
       value: item.value,
       category: item.category,
       channel: item.channel,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
     }));
   }
 
