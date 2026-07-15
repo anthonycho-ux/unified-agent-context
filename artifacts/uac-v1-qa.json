@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "kind": "package-test-report",
+  "feature": "UAC Local-First Unified Memory v1 (bidirectional)",
+  "surface": "node package + CLI",
+  "verification": {
+    "hermeticSuite": {
+      "command": "node --test tests/*.test.mjs",
+      "result": "86 pass / 0 fail / 5 suites",
+      "newCoverage": [
+        "context-sync: push-only, pull-only, newest-wins each direction, equal-time no-op, idempotency/convergence, category filter, poison-row skip+continue, saveFactValidated-no-librarian",
+        "injector-union: union dedup newer-wins, sov-down->local-only partial, local-down->sov-only partial, both-down->degrade, UAC_STRICT throws, global/project isolation",
+        "hard no-SSH guard: assertNodeSpec asserts every spawned store spec.command === 'node'"
+      ]
+    },
+    "liveRedTeamAndE2E": {
+      "reconcileRun1": "node scripts/context-sync.mjs -> pushed=0 pulled=49 skipped=2 failed=0 scopes=6 (exit 0)",
+      "reconcileRun2": "node scripts/context-sync.mjs -> pushed=0 pulled=0 skipped=2 failed=0 (converged, idempotent, exit 0)",
+      "poisonIsolationLive": "2 pre-existing malformed local rows (ssh_sov_auto_route_20260712, codex_feature_hooks_migration_2026_07_11) warned + skipped without failing the cycle",
+      "unionReadLive": "node scripts/inject-context.mjs renders unioned global+project facts (not degraded)",
+      "degradeSafe": "CLI always exits 0; sov-unreachable path warns and skips the cycle"
+    }
+  },
+  "adversarialCases": [
+    { "scenario": "poison row (key != recomputed dedupe_key)", "expected": "warn+skip, cycle continues", "verdict": "passed (hermetic + live)" },
+    { "scenario": "secret in statement", "expected": "assertSafe blocks, row skipped", "verdict": "passed (reuses fail-closed secret gate)" },
+    { "scenario": "both sources down", "expected": "injector degrades (empty block) / throws under UAC_STRICT", "verdict": "passed" },
+    { "scenario": "equal updated_at both sides", "expected": "no write (no oscillation)", "verdict": "passed" },
+    { "scenario": "second reconcile pass", "expected": "pushed=0 pulled=0", "verdict": "passed (hermetic + live)" }
+  ],
+  "knownNonGoals": ["delete/tombstone propagation (v1)", "digest bus (phase 2)"]
+}
