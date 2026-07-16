@@ -1,0 +1,52 @@
+# ROUTING.md — implementation-task delegation fallback order (Mac)
+
+Verified 2026-07-16 by Claude Code (direct filesystem + auth-token decode on the user's Mac).
+Companion shared-store fact: dedupe_key `4814080805b18405` (scope `global`).
+
+## The one thing that keeps biting the fleet
+
+`codex-secondary` is **not** a second account. Both `~/.codex/auth.json` and
+`~/.codex-secondary/auth.json` decode to the **same** ChatGPT account (same
+`chatgpt_account_id`, same email, same `plus` plan, same org). A `CODEX_HOME`
+switch gives a separate *session*, not a separate *quota*.
+
+Consequence: when Primary hits an **account-level weekly usage cap**, Secondary
+is capped too. Failing over to `codex-secondary` / `codex-web` only helps for
+**CODEX_HOME-local** failures (corrupted token, broken session state), never for
+an account cap. (Corroborated 2026-07-13: the codex secondary device-login also
+returned 429 when the account was rate-limited.)
+
+Current known state: **Primary Codex weekly cap active, blocked until 2026-07-22.**
+
+## Fallback order for implementation (side-effecting) tasks
+
+1. **Codex Primary** (`codex-primary`, `CODEX_HOME=~/.codex`) — default when quota is available.
+2. ~~Codex Secondary~~ — **SKIP for usage-cap failures** (same account = same cap).
+   Use `codex-secondary` *only* if the failure is CODEX_HOME-local (auth/session
+   corruption on Primary), never as a quota workaround.
+3. **Claude Code CLI** (local) — the healthy implementation fallback. Verified:
+   v2.1.211, authed `<account-email>`, Claude Max 5x, valid credentials.
+   No network dependency beyond Anthropic API. **Preferred fallback when Codex is capped.**
+4. **gjc via `ssh sov` / `sov-ts`** (network-dependent) — sov is reachable over SSH
+   and carries its own `codex` + `claude` binaries. **Caveat:** gjc delegates to a
+   model provider; if its role-agent overrides point at the (capped) OpenAI/Codex
+   account, gjc fast-fails with 429 just like Primary. Before routing here, confirm
+   gjc's `config.yml` role-agents point at a healthy provider (e.g. `claude-opus-4-8`),
+   and that sov's own codex auth is configured (unverified as of 2026-07-16 — no
+   `~/.codex/auth.json` in sov's default home).
+5. **Ask the human (the user).** When 1–4 are unavailable or the task is
+   consequential, escalate rather than silently degrade.
+
+## Read-only / research tasks
+
+Use `codex-web` (auto-fails Primary → Secondary on rate-limit). Still bound by the
+same account cap, so on a weekly cap this also stalls — fall through to Claude Code
+CLI or gjc(healthy-provider) as above.
+
+## Guardrails
+
+- **Never auto-retry side-effecting work across CODEX_HOME accounts** — duplicates
+  actions and breaks provenance.
+- **Verify before believing a routing fact.** A sandboxed agent (e.g. Aside/Sol)
+  may not see `~/.local/bin` or `~/.codex*` paths and can wrongly conclude a worker
+  is "missing." Confirm on the real host before rewriting shared facts.
