@@ -37,5 +37,10 @@ try {
     process.exit(3);
   }
   process.stderr.write(`[uac-record] ERROR: ${error?.message ?? error}\n`);
+  if (Array.isArray(error?.issues)) {
+    for (const issue of error.issues) {
+      process.stderr.write(`  - ${issue.path}: ${issue.message}\n`);
+    }
+  }
   process.exit(1);
 }
