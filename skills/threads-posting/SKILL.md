@@ -69,6 +69,15 @@ Trigger: the user asks to analyze Buffer insights, wants engagement growth, or a
 - the user's stated intent for social media is to build his own tribe in the Seth Godin sense (Tribe, the book): a community of people who share his values and identity, not a follower count or audience. Recorded to UAC as dedupe 63a1d8c0165c85f5 so Hermes and other agents share it.
 - Evaluate every analysis output and content move against the question: does this build the tribe (shared values, belonging, identity) or just chase vanity metrics? The winning content shapes are means; tribe-building is the end.
 
+## Content lens: meta observer industry-acquisition pattern (the user, 2026-08-19)
+
+A standing content lens for ideation, separate from the tribe-building lens above. Use it whenever drafting or suggesting Threads content about AI's effect on industries, not only when the user explicitly names it.
+
+- The lens: watch industries from outside, as a meta observer, not as a participant defending a position. The pattern to track is an industry that has data but has not turned it into AI-driven capability, its stagnation becomes visible, then a big tech or AI-capable company acquires it, that acquisition is the industry's only real path to evolving. Worked examples the user has already used: Google acquiring Spirit Airlines (airline data), Musk acquiring Twitter (social data).
+- Purpose stated explicitly by the user: this lens exists to create engaging content, not to be a personal confessional or a self-directed critique. Point the lens outward at industries and companies, not inward at the user's own business unless he explicitly asks for that angle.
+- Practical use: this is a recurring content generator. When asked for post ideas or during ideation, propose candidate industries that fit the pattern (data-rich, AI-lagging, ripe for acquisition, e.g. insurance underwriting, logistics brokerage, accounting firms) as raw material, then let the user pick and draft in his own voice.
+- Add "meta observer industry-acquisition pattern" as a recognized theme in the Insights analysis theme-signal classification above, alongside personal proof + forward claim, machine demo, and question CTA.
+
 ## When the user gives only an image or a rough idea
 
 1. Read the attached image/page fully first.
