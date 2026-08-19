@@ -11,6 +11,15 @@ description: Publish posts on Threads (threads.com) for the user. Use whenever t
 - Keep every name, alias, and code-switch (English/Korean mixing, tool names, quoted phrases) exactly as written. If the user publicly refers to the agent by an alias different from its private name, keep the alias verbatim and never surface the private name publicly.
 - No emojis, no hashtags, no engagement bait, no calls to action unless the user wrote them.
 
+## Hard rule: commas and periods only
+
+- Post copy may use ONLY commas and periods as punctuation. No quotation marks, parentheses, question marks, exclamation marks, colons, semicolons, dashes, or ellipses.
+- Rework phrasing so quoted speech becomes plain reported clauses and parenthetical asides become separate sentences or comma appositives. (Stated by the user as a hard rule, 2026-07-20.)
+
+## Register: plain declarative endings for drafts
+
+- Drafted posts default to plain 평서체 endings (한다, 아니다, 했다), not 습니다체, which matches the approved essay/aphorism register. The user's own supplied text keeps its original endings untouched. (Corrected 2026-07-20.)
+
 ## When the user gives only an image or a rough idea
 
 1. Read the attached image/page fully first.
@@ -91,6 +100,18 @@ Variables shape (single post):
 
 `ShareMode` values: `shareNow`, `addToQueue`, `shareNext`, `customScheduled` (use `dueAt` ISO UTC with custom).
 
+### Confirm the post actually sent
+
+`createPost` returns `status: "sending"`. Poll with this shape, NOT `post(id:)`, which does not exist and silently returns null:
+
+```graphql
+query($input: PostInput!) { post(input: $input) { id status text createdAt } }
+```
+
+Variables: `{"input": {"id": "<postId>"}}`. Expect `sent` within about 15 seconds. Write both the mutation and poll bodies to JSON files and `scp` them before curling on the remote host; inline SSH heredocs let the shell consume GraphQL `$variable` names.
+
+When the post copy contains Korean or other non-ASCII text, write the JSON programmatically (`JSON.stringify` via Node) instead of a shell heredoc: heredocs can silently corrupt the file mid-content (verified 2026-08-19, `JSON.parse` failed exactly at a long Korean line). Validate with `node -e "JSON.parse(require('fs').readFileSync('file.json','utf8'))"` before scp.
+
 ### Multi-post Threads threads via Buffer
 
 Pass every segment in `metadata.threads.thread`, including the first. Top-level `text` must match the first thread item.
@@ -124,20 +145,27 @@ Prefer GraphQL variables for Korean/quoted text so escaping stays clean. Run the
 
 ## Fallback: browser on threads.com
 
-Use only when Buffer is unavailable, the channel is disconnected, media path needs the native composer, or the user asks for on-site composition.
+Use only when Buffer is unavailable, the channel is disconnected, the media path needs the native composer, the user asks for on-site composition, or the target is a reply to someone else. Buffer `createPost` only publishes on the user's own profile; it cannot notify another account.
 
-1. Click "What's new?" (or "Create").
+1. For a new post, click "What's new?" (or "Create"). For a reply to an OP, open their post URL, expand the inline composer, and stay on that thread. A localhost or file:// page never reaches them.
 2. Fill the first textbox (Playwright `fill` works on the contenteditable).
-3. Attach media via "Attach media" + `filechooser` when needed.
+3. Attach media via "Attach media" + `filechooser`. To attach multiple local images in one go, pass all paths as an array to one `setFiles` call (`chooser.setFiles([path1, path2])`). A local visualization is shared as a screenshot attached to the reply, not as a URL.
 4. "Add to thread" for each subsequent segment; fill each new textbox.
 5. After fill, verify with `.innerText()` — snapshot trees can falsely duplicate contenteditable text.
+6. After a successful reply, Threads may immediately open an Edit dialog on the live reply. That is not unpublished. Proof is the parent thread showing the reply plus the Posted toast. Do not Post again.
+
+### Source an image from Bing (when needed)
+
+Plain `curl` against `bing.com/images/search` returns a decoy result set of unrelated images even with a desktop UA and `mkt=en-US`, failing silently rather than erroring. Use a real browser tab instead: `openTab` the search URL, then `page.evaluate` over `a.iusc`, `JSON.parse` each element's `m` attribute, and read `t` (title) plus `murl`. Always sanity-check the titles against the query before trusting the URLs.
 
 ## Publish gate and verification
 
 1. Before any externally visible publish, screenshot the draft (or thread segments) and use `request_action_confirmation` as the single approval gate. One gate, not multi-round drafting.
 2. After Buffer `shareNow`, poll post status until `sent` (or surface `error`). Then open the live profile and confirm every segment + source links/media.
 3. After browser Post, wait for the posting toast/profile update, reload profile if needed, confirm live text.
-4. Capture a proof screenshot of the live post and include it in the final report.
+4. Multi-segment threads need per-segment live verification, not just a toast: a later segment (observed: the final one carrying a link preview card) can silently fail to publish while earlier segments succeed, with Threads recounting the thread as N/N. If a segment is missing after a reload, post it as a self-reply under the last live segment; the reply rejoins the thread numbering. Also, a single post cannot hold both an attached image and a link preview card — remove the card (URL stays as plain text) to attach media, or split them across segments.
+5. To open the just-posted thread for review, never trust the first `/post/` href on the profile or DOM order: a pinned post can sit at the top of the profile and send you to the wrong thread (observed 2026-08-17). Match the post by its text or timestamp instead, e.g. scan each `/post/` anchor's nearest container text for the posted copy, or select by the newest timestamp.
+6. Capture a proof screenshot of the live post and include it in the final report.
 
 ## Living skill (standing order)
 
