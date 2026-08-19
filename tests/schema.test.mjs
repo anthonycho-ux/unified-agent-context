@@ -17,6 +17,7 @@ const VALID = Object.freeze({
   dedupe_key: 'deadbeefdeadbeef',
   retention_class: 'permanent',
   sensitivity_class: 'normal',
+  status: 'verified',
 });
 
 describe('validateFact', () => {

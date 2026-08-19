@@ -11,7 +11,7 @@ UAC storeFact 성공 (모든 경로: 명시 기록/증류)
          └─▶ data/memory/librarian/outbox.jsonl (dedupe: outbox+sent)
                └─▶ scripts/librarian-sync.mjs (수동/cron)
                      └─(ssh)─▶ sov: Letta "The Noticer"
-                               ~/.letta/agents/agent-e3b792d4-…/memory/reference/inbox/uac-*.md
+                               <UAC_NOTICER_INBOX>/uac-*.md   (기본: ~/.letta/agents/<agent-id>/memory/reference/inbox)
                                사서가 세션에서 promote/merge/discard 판단
 ```
 
@@ -36,7 +36,7 @@ UAC storeFact 성공 (모든 경로: 명시 기록/증류)
 | `UAC_LIBRARIAN` | (enabled) | `0`이면 큐잉 비활성 |
 | `UAC_LIBRARIAN_DIR` | `<DATA_DIR>/librarian` | outbox/sent 위치 |
 | `UAC_LIBRARIAN_HOST` | `sov` | ssh 호스트 |
-| `UAC_LIBRARIAN_INBOX` | The Noticer reference/inbox 절대경로 | 배달 대상 |
+| `UAC_LIBRARIAN_INBOX` / `UAC_NOTICER_INBOX` | `~/.letta/agents/<agent-id>/memory/reference/inbox` | 배달 대상 |
 
 ## 검증
 
@@ -46,5 +46,5 @@ UAC storeFact 성공 (모든 경로: 명시 기록/증류)
 
 ## 후속
 
-- ~~cron 배달 자동화~~ **완료 (2026-07-08):** launchd `com.uac.librarian-sync` — 1시간 주기 + RunAtLoad, 로그 `data/logs/librarian-sync.log`. 세션 종료 훅 방식은 ssh 지연을 세션 종료에 전가하므로 기각.
+- ~~cron 배달 자동화~~ **완료 (2026-07-08):** launchd `<com.uac.librarian-sync>` — 1시간 주기 + RunAtLoad, 로그 `data/logs/librarian-sync.log`. 세션 종료 훅 방식은 ssh 지연을 세션 종료에 전가하므로 기각.
 - 사서 처리 결과(promote/discard)의 역방향 피드백 — v2에서 UAC가 사서 판단을 로컬 캐시에 반영.

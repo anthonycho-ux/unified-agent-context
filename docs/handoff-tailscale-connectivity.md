@@ -13,7 +13,7 @@ over SSH stdio-MCP. Config: `uac.config.json`. Host resolution: `src/config.mjs`
 `scripts/inject-context.mjs`.
 
 ## The problem
-sov is reachable two ways: SSH alias `sov` (LAN, e.g. 172.16.0.46) and `sov-ts` (Tailscale).
+sov is reachable two ways: SSH alias `sov` (LAN, e.g. <lan-ip>) and `sov-ts` (Tailscale).
 The owner **often leaves Tailscale on at home and forgets to turn it off**, so connectivity
 state is inconsistent:
 - Tailscale ON (home or away): `sov-ts` works; LAN `sov` may or may not.
