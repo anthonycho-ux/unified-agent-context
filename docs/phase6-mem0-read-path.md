@@ -15,7 +15,7 @@
 | Component | Status | Notes |
 |---|---|---|
 | mem0 CLI (`~/.local/bin/mem0`) | ❌ search broken | depended on the GPU embedding server `localhost:8090` |
-| `~/bin/memstore-hermes.py` | ✅ search worked | fastembed (BAAI/bge-base-en-v1.5), CPU, no server needed |
+| `~/bin/memstore-read.py` | ✅ search worked | fastembed (BAAI/bge-base-en-v1.5), CPU, no server needed |
 | LLM server (8080/8081) | ✅ alive | local GGUF |
 | chroma store (`~/.letta/mem0_data`) | ✅ data exists | `letta_memories` collection, 1.6MB |
 | qdrant (6333) | ❌ not running | separate project (knowledge indexing), unrelated to mem0 |
@@ -34,12 +34,12 @@
 
 ## Verified fact (tested at the time)
 
-`python3 ~/bin/memstore-hermes.py --read "writing style preference"` → search
+`python3 ~/bin/memstore-read.py --read "writing style preference"` → search
 succeeded (relevant memories returned).
 
 ## Notes
 
-- `memstore-hermes.py`'s read() setup was the source of truth: fastembed +
+- `memstore-read.py`'s read() setup was the source of truth: fastembed +
   chroma `letta_memories`
 - The Noticer drain (`noticer-inbox-drain.py`) handles writes only; the read
   path was to be wired here
