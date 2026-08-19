@@ -23,7 +23,7 @@
 ## Recovery plan (next steps)
 
 1. Point the mem0 CLI setup at the same fastembed-based configuration as
-   `memstore-hermes.py`:
+   `memstore-read.py`:
    - embedder: `fastembed` + `BAAI/bge-base-en-v1.5` (CPU, no server)
    - llm: keep the existing local GGUF server
 2. Add a mem0 search-results section to `getInjectionBlock` in
