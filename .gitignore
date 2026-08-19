@@ -4,4 +4,8 @@ data/mem0/
 *.log
 .gjc/
 data/
-.DS_Store
+.letta/
+.omc/
+artifacts/**/*.db-shm
+artifacts/**/*.db-wal
+docs/private/agent-routine.md

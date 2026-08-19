@@ -11,6 +11,8 @@ export const RETENTION_BY_FACT_TYPE = Object.freeze({
 const FACT_TYPES = new Set(['decision', 'preference', 'project_state']);
 const RETENTION_CLASSES = new Set(['permanent', 'days90', 'days180']);
 const SENSITIVITY_CLASSES = new Set(['normal', 'sensitive']);
+// verified: 주입 대상. proposed: 자동 증류 후보 — 사용자 발화로 승격되기 전까지 주입 제외.
+const STATUS_CLASSES = new Set(['verified', 'proposed']);
 
 export class SchemaError extends Error {
   constructor(issues) {
@@ -105,6 +107,10 @@ export function validateFact(obj) {
     issues.push({ path: 'sensitivity_class', message: 'must be normal or sensitive' });
   }
 
+  if ('status' in obj && obj.status !== undefined && !STATUS_CLASSES.has(obj.status)) {
+    issues.push({ path: 'status', message: 'must be verified or proposed' });
+  }
+
   if (issues.length > 0) {
     throw new SchemaError(issues);
   }
@@ -119,6 +125,8 @@ export function validateFact(obj) {
     dedupe_key: obj.dedupe_key,
     retention_class: obj.retention_class,
     sensitivity_class: obj.sensitivity_class,
+    // status 없는 기존 팩트는 verified로 간주 (하위 호환)
+    status: obj.status ?? 'verified',
   };
 }
 
@@ -143,5 +151,6 @@ export function makeFact(partial) {
     dedupe_key: partial.dedupe_key ?? (typeof statement === 'string' ? dedupeKey(statement, scope) : undefined),
     retention_class: retentionClass,
     sensitivity_class: partial.sensitivity_class ?? 'normal',
+    status: partial.status ?? 'verified',
   });
 }

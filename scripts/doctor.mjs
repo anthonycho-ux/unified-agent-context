@@ -55,11 +55,28 @@ async function readOrNull(p) {
   add('codex', 'AGENTS.md 지시 pull', (agents ?? '').includes('공유 컨텍스트 (unified-agent-context)'), '훅 부재 — 문서화된 제약');
 }
 
-// lettacode
+// lettacode / letta (binary may be either name)
 {
   let installed = false;
-  try { await run('which', ['lettacode']); installed = true; } catch { /* not installed */ }
-  add('lettacode', '설치 여부', true, installed ? '설치됨 — 온보딩 절차 적용 필요' : '미설치 (documented constraint) — 설치 시 온보딩 문서 절차 적용');
+  let bin = '';
+  for (const name of ['letta', 'lettacode']) {
+    try {
+      await run('which', [name]);
+      installed = true;
+      bin = name;
+      break;
+    } catch { /* try next */ }
+  }
+  // Installation alone is OK. Full UAC harness onboarding (MCP/hooks) remains optional —
+  // Letta's appointed role is SOV librarian (The Noticer), not a chat harness peer.
+  add(
+    'lettacode',
+    '설치 여부',
+    true,
+    installed
+      ? `설치됨 (${bin}) — 사서(Noticer) 역할; 채팅 하네스 온보딩은 선택`
+      : '미설치 (documented constraint) — 설치 시 온보딩 문서 절차 적용',
+  );
 }
 
 // injector core

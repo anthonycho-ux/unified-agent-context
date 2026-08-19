@@ -13,8 +13,14 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "mcp-memory-keeper": "^0.14.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
   }
 }

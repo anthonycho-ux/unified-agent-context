@@ -163,6 +163,20 @@ export class ContextStore {
       });
       try {
         await client.connect(transport);
+        // 하네스 출처 추적: UAC_SESSION_NAME이 있으면 그 이름의 세션을 시작한다.
+        // (서버는 session_start마다 새 세션 행을 만들며, 공개 항목은 세션을 넘어 읽힌다.)
+        // 실패할 때 기록 자체가 막히지 않도록 경고 후 기본 세션으로 진행한다.
+        const sessionName = process.env.UAC_SESSION_NAME;
+        if (sessionName) {
+          try {
+            await client.callTool({
+              name: 'context_session_start',
+              arguments: { name: sessionName, description: 'UAC 하네스 세션 (UAC_SESSION_NAME)' },
+            });
+          } catch (sessionError) {
+            console.warn(`named session 시작 실패, 기본 세션으로 진행: ${sessionError.message}`);
+          }
+        }
         return new ContextStore(client, transport);
       } catch (error) {
         lastError = error;
