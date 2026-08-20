@@ -36,6 +36,34 @@ const SECRET_PATTERNS = [
     regex: /^\s*(?:export\s+)?[A-Z0-9_]*(?:SECRET|TOKEN|KEY|PASSWORD)[A-Z0-9_]*\s*=\s*["']?[^"'\s#]{4,}["']?/gmi,
   },
   {
+    name: 'github_pat',
+    regex: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{30,}\b|\bgithub_pat_[A-Za-z0-9_]{20,}\b/g,
+  },
+  {
+    name: 'google_api_key',
+    regex: /\bAIza[0-9A-Za-z_-]{35}\b/g,
+  },
+  {
+    name: 'slack_token',
+    regex: /\bxox[baprs]-[0-9A-Za-z-]{10,}\b/g,
+  },
+  {
+    name: 'stripe_key',
+    regex: /\b[sr]k_(?:live|test)_[0-9A-Za-z]{16,}\b/g,
+  },
+  {
+    name: 'jwt_token',
+    regex: /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g,
+  },
+  {
+    name: 'sendgrid_key',
+    regex: /\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\b/g,
+  },
+  {
+    name: 'high_entropy_hex',
+    regex: /\b[0-9a-f]{32,}\b/gi,
+  },
+  {
     name: 'base64_credential',
     regex: /\b(?:secret|token|key|password|credential)\b[^\n]{0,40}\b[A-Za-z0-9+/]{40,}={0,2}\b/gi,
   },
