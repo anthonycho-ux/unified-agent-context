@@ -53,6 +53,7 @@ In plain words.
 | `docs/phase6-mem0-read-path.md` | Historical recovery plan for the mem0 read path. |
 | `docs/onboarding.md` | How a new agent joins in five minutes. |
 | `docs/handoff-tailscale-connectivity.md` | What to do when the store connection flakes. |
+| `docs/basecamp/basecamp-ops.md` | Basecamp 5 fleet operations: CLI, auth quirks, account <basecamp-account-id> (2026-08-26 setup notes). |
 
 ## The commands
 
