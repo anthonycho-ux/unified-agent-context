@@ -50,10 +50,11 @@ In plain words.
 | `docs/phase4-coverage-matrix.md` | Twenty delivery paths, tested and verified. |
 | `docs/phase5-librarian.md` | The librarian lane that curates permanent facts. |
 | `docs/phase6-remote.md` | Moving the main store to store-host, and reaching it over ssh. |
-| `docs/phase6-mem0-read-path.md` | Historical recovery plan for the mem0 read path. |
 | `docs/onboarding.md` | How a new agent joins in five minutes. |
 | `docs/handoff-tailscale-connectivity.md` | What to do when the store connection flakes. |
+| `docs/threejs/index.md` | Three.js agent knowledge base hub: core architecture, API cheatsheet, shaders, pitfalls, worked example. |
 | `docs/basecamp/basecamp-ops.md` | Basecamp 5 fleet operations: CLI, auth quirks, account <basecamp-account-id> (2026-08-26 setup notes). |
+| `docs/basecamp/cli-reference.md` | Basecamp 5 CLI verified reference v0.9.1: install, auth, every tool group, error codes, live corrections. |
 
 ## The commands
 
@@ -65,7 +66,7 @@ node scripts/librarian-sync.mjs [--strict]           # deliver outbox → store-
 node scripts/doctor.mjs                              # wiring self-check
 node scripts/cross-verify.mjs                        # re-run the 20-path coverage matrix
 node scripts/reexplain.mjs log|report                # re-explanation metrics (2-week gate aux indicator)
-node --test 'tests/*.test.mjs'                       # full test suite (82)
+node --test 'tests/*.test.mjs'                       # full test suite (73)
 ```
 
 ## The two week test

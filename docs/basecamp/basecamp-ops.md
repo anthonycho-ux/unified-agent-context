@@ -8,9 +8,9 @@ TL;DR: Basecamp 5 (2026) is agent-ready: official CLI, SDK, MCP server, and agen
 
 - Account ID: **<basecamp-account-id>** (in URL path app.basecamp.com/<basecamp-account-id>/)
 - Slug: **Hermes Basecamp**; profile name: **Hermes**; login email: **<account-email>**
-- Plan: **Basecamp Free** — max 3 projects, 1 GB storage, cannot archive projects (only permanently delete, no undo; delete frees a project slot)
+- Plan: **Basecamp Free** — exactly 1 project (verified live 2026-08-30: creating a 2nd returns limit_exceeded), 1 GB storage, cannot archive projects (only permanently delete, no undo; delete frees a project slot)
 - Browser session works from the Aside browser; launchpad.37signals.com session is separate and may require re-login even when app.basecamp.com still works
-- Project slots (after 2026-08-30 cleanup): our집 (id 48692046, created by Sol with description), and two planned slots: 리서치-라이팅, 구직. The two original test projects (My Project, Making a Podcast sample) were permanently deleted.
+- Project slots (after 2026-08-30 cleanup): only 우리집 (id 48692046) fits the Free 1-project limit. 리서치-라이팅 and 구직 could not be created (limit_exceeded) and need a paid plan or a different tool; the two original test projects (My Project, Making a Podcast sample) were permanently deleted.
 
 ## CLI (official, installed on store-host)
 
