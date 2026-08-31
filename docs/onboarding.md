@@ -11,6 +11,20 @@
 - 스코프 규약: 전역 선호 = channel `global`, 프로젝트 결정 = channel `project:<git-root-basename>`
 - 금지: API 키/토큰/자격증명을 공유 메모리에 저장하지 않는다 (게이트가 차단하지만 원칙으로도 금지)
 
+### 0.1 설치 후 필수: 네이티브 모듈 재빌드
+
+`better-sqlite3`는 Node 버전에 컴파일되는 네이티브 모듈이다. Node를 업그레이드한 뒤
+`npm install`만으로는 스토어가 뜨지 않고 `MCP error -32000: Connection closed` 또는
+`NODE_MODULE_VERSION` 불일치 오류가 난다. 설치 직후(및 Node 업그레이드 직후) 반드시:
+
+```sh
+npm rebuild better-sqlite3
+```
+
+검증: `node --test 'tests/*.test.mjs'` → 148개 전부 pass (fail 0).
+
+
+
 ## 1. MCP 연결 (온디맨드 검색/기록)
 
 에이전트의 MCP 등록 명령으로 위 서버를 `unified-memory` 이름으로 등록한다.
