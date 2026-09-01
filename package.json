@@ -15,6 +15,7 @@
   "type": "module",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "mcp-memory-keeper": "^0.14.0"
+    "mcp-memory-keeper": "^0.14.0",
+    "omo-ai": "^5.0.0-0.beta.24"
   }
 }

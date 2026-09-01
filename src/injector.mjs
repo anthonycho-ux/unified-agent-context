@@ -47,20 +47,60 @@ async function bumpMetrics(fields) {
   return metrics;
 }
 
+// 주입 예산: proposed 제외, 섹션별 개수 상한, 전체 문자 상한. 최신순 우선.
+const INJECT_LIMITS = Object.freeze({
+  global: Number(process.env.UAC_INJECT_GLOBAL_MAX ?? 30),
+  project: Number(process.env.UAC_INJECT_PROJECT_MAX ?? 20),
+  maxChars: Number(process.env.UAC_INJECT_MAX_CHARS ?? 8192),
+});
+
+function factTime(fact) {
+  const t = Date.parse(fact.updated_at ?? fact.created_at ?? '');
+  return Number.isFinite(t) ? t : 0;
+}
+
+export function selectForInjection(facts, limit) {
+  const eligible = facts.filter((f) => f.status !== 'proposed');
+  const selected = [...eligible].sort((a, b) => factTime(b) - factTime(a)).slice(0, limit);
+  return { selected, omitted: facts.length - selected.length };
+}
+
 function renderBlock(projectScope, globalFacts, projectFacts) {
   const lines = ['## 공유 컨텍스트 (unified-agent-context)', ''];
   if (globalFacts.length === 0 && projectFacts.length === 0) {
     lines.push('_아직 공유된 사실이 없습니다. 중요한 결정/선호는 공유 메모리에 기록하세요._');
     return lines.join('\n');
   }
-  if (globalFacts.length > 0) {
-    lines.push('### 전역 선호');
-    for (const f of globalFacts) lines.push(`- ${f.statement}`);
+
+  const g = selectForInjection(globalFacts, INJECT_LIMITS.global);
+  const p = selectForInjection(projectFacts, INJECT_LIMITS.project);
+
+  let chars = 0;
+  let truncated = 0;
+  const renderSection = (header, facts, toLine) => {
+    const body = [];
+    for (const f of facts) {
+      const line = toLine(f);
+      if (chars + line.length > INJECT_LIMITS.maxChars) {
+        truncated++;
+        continue;
+      }
+      chars += line.length + 1;
+      body.push(line);
+    }
+    // 예산에 든 항목이 하나도 없으면 헤더도 내보내지 않는다.
+    if (body.length > 0) lines.push(header, ...body, '');
+  };
+
+  renderSection('### 전역 선호', g.selected, (f) => `- ${f.statement}`);
+  renderSection(`### 프로젝트 컨텍스트 (${projectScope})`, p.selected, (f) => `- [${f.fact_type}] ${f.statement}`);
+
+  const omittedTotal = g.omitted + p.omitted + truncated;
+  if (omittedTotal > 0) {
     lines.push('');
-  }
-  if (projectFacts.length > 0) {
-    lines.push(`### 프로젝트 컨텍스트 (${projectScope})`);
-    for (const f of projectFacts) lines.push(`- [${f.fact_type}] ${f.statement}`);
+    lines.push(
+      `_예산 초과/미승격으로 ${omittedTotal}건 생략됨. 필요 시 context_search로 조회._`,
+    );
   }
   return lines.join('\n').trimEnd();
 }

@@ -58,8 +58,9 @@ export async function distillSession({ content, scope, sessionId, store }) {
         }
         throw error;
       }
+      // 자동 증류분은 proposed 후보로만 저장한다. 사용자 발화 근거로 승격되기 전까지 주입 제외.
       await connected.storeFact(
-        makeFact({ ...candidate, scope, source_ref: `session:${sessionId}` }),
+        makeFact({ ...candidate, scope, source_ref: `session:${sessionId}`, status: 'proposed' }),
       );
       stored++;
     }

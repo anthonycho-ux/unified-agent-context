@@ -90,6 +90,7 @@ A standing content lens for ideation, separate from the tribe-building lens abov
 - Prefer a final thread segment titled like `출처` / `Sources` with full URLs (CDC, EPA, papers, etc.).
 - Do not invent sources. Only cite URLs actually used.
 - Skip the sources segment only for pure opinion, diary, or when the user explicitly wants no links.
+- **Inline citation format: `(출처: url)` right after the claim (the user, 2026-08-23).** When the user wants each source clickable beside its claim rather than a trailing sources segment, wrap the URL as `(출처: <url>)` immediately after the supported sentence. The parenthetical is an explicit user override of the commas-and-periods-only punctuation rule. X auto-renders these URLs as link preview cards, which is accepted and even useful as visible proof.
 
 ## Character limits and threading
 
@@ -210,6 +211,7 @@ Prefer GraphQL variables for Korean/quoted text so escaping stays clean. Run the
 - To set or change it on an existing draft, `editPost` requires `text` to be resent alongside `metadata` even when only the topic is changing, otherwise it returns `InvalidInputError: Post must have either text or media`.
 - Reading it back: `metadata` on `post` is a union (`PostMetadata`), query it as `metadata { ... on ThreadsPostMetadata { topic } }`, not a flat field.
 - Only set a topic when the user asks for one; it is not part of the default post shape.
+- Topic validity is enforced at post time (2026-08-30). An arbitrary topic string such as three.js is rejected as a violating tag (This tag is not allowed on Threads), which blocks the post with a dialog and closes the composer, losing the draft. To guarantee a valid tag, enter a term in the composer topic field and SELECT one of the autocomplete suggestions instead of typing free text. Coverage varies: AI returned no suggested searches, while JavaScript, Technology, Tech, and Programming all offered valid options. Selecting from the suggestions avoids the violating-tag block.
 
 ## Publish path notes (2026-08-19)
 

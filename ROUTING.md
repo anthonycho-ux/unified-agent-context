@@ -28,7 +28,11 @@ Current known state: **Primary Codex weekly cap active, blocked until 2026-07-22
    v2.1.211, authed `<account-email>`, Claude Max 5x, valid credentials.
    No network dependency beyond Anthropic API. **Preferred fallback when Codex is capped.**
 4. **gjc via `ssh sov` / `sov-ts`** (network-dependent) — sov is reachable over SSH
-   and carries its own `codex` + `claude` binaries. **Caveat:** gjc delegates to a
+   and carries its own `codex` + `claude` binaries. **PATH caveat (verified 2026-08-02):**
+   a bare `ssh sov '<cmd>'` runs a non-login shell that reads none of sov's rc files,
+   so it finds the OLD system-dir binaries (`/usr/bin/claude`, `/snap/bin/codex`,
+   `/usr/local/bin/letta`), not the current home-dir installs. Always invoke as
+   `ssh sov 'bash -lc "<cmd>"'` to get the real versions. **Caveat:** gjc delegates to a
    model provider; if its role-agent overrides point at the (capped) OpenAI/Codex
    account, gjc fast-fails with 429 just like Primary. Before routing here, confirm
    gjc's `config.yml` role-agents point at a healthy provider (e.g. `claude-opus-4-8`),

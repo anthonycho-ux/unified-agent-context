@@ -2,6 +2,18 @@
 
 새 에이전트를 공유 컨텍스트에 합류시키는 표준 절차. 소요: 5분 내외.
 
+## 빠른 경로 — 온보딩 (권장)
+
+```sh
+node scripts/onboard-agent.mjs --list                      # 지원 하네스 목록
+node scripts/onboard-agent.mjs --harness <이름> --dry-run  # 계획 확인 (쓰기 없음)
+node scripts/onboard-agent.mjs --harness <이름>            # 적용 (자동 백업 .bak-uac-<date>)
+```
+
+지원: `kimi` `codex` `gjc` `hermes` `claude`. 모든 단계는 멱등 — 이미 배선된 항목은 "already wired"로 건너뛴다. 미지원 하네스를 지정하면 수동 배선 스펙을 출력한다. 아래 표는 도구가 하는 일(=수동 폴백 절차)의 레퍼런스다.
+
+새 하네스 어댑터 추가: `scripts/onboard-agent.mjs`의 `adapters` 레지스트리에 항목을 추가한다. 어댑터는 최대 3개 액션을 선언한다 — **mcp**(공유 스토어 등록), **inject**(세션 시작 주입: 훅 또는 지시 파일), 그리고 doctor.mjs에 대응 체크 블록. `tests/onboard.test.mjs`에 등록/멱등 테스트를 함께 추가한다.
+
 ## 0. 공통 정보
 
 - 공유 메모리 서버(스토어): `node <repo>/node_modules/mcp-memory-keeper/dist/index.js`
@@ -21,6 +33,7 @@
 | codex | `~/.codex/config.toml`에 `[mcp_servers.unified-memory]` 블록 (command/args/env) |
 | hermes | `printf 'Y\n' \| hermes mcp add unified-memory --command node --env DATA_DIR=<DATA_DIR> --args <서버 경로>` |
 | gjc | `gjc mcp add unified-memory --env DATA_DIR=<DATA_DIR> node <서버 경로>` |
+| kimi | `~/.kimi-code/mcp.json`에 `mcpServers.unified-memory` 블록 (command/args/env) |
 | 기타 MCP 지원 에이전트 | 해당 에이전트의 stdio MCP 등록 절차에 동일 스펙 적용 |
 
 등록 확인: 에이전트의 MCP 목록/health 명령에서 `unified-memory` 연결 확인 (도구: `context_save`/`context_get`/`context_search_all` 등).
@@ -32,6 +45,7 @@
 **A. 세션 시작 훅 지원 시** — 훅에서 주입 커맨드를 실행하고 stdout을 컨텍스트에 추가:
 - claude code: `~/.claude/settings.json` → `hooks.SessionStart[].hooks[] = {type:"command", command:"node .../inject-context.mjs"}`
 - hermes: `~/.hermes/config.yaml` → `hooks.pre_llm_call[].command = ".../scripts/hermes-pre-llm-hook.sh"` (첫 턴에만 주입; 최초 1회 동의 프롬프트 발생)
+- kimi: `~/.kimi-code/config.toml` → `[[hooks]] event="UserPromptSubmit", command=".../scripts/kimi-user-prompt-hook.sh"` (세션당 첫 프롬프트에만 주입; stdout이 컨텍스트에 append)
 
 **B. 훅 미지원 시 (지시 기반 pull)** — 에이전트의 전역 지시 파일에 다음 지시를 추가:
 - codex: `~/.codex/AGENTS.md` / gjc: `~/.gjc/agent/rules/uac-shared-context.md`
