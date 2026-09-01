@@ -52,6 +52,9 @@ In plain words.
 | `docs/phase6-remote.md` | Moving the main store to store-host, and reaching it over ssh. |
 | `docs/onboarding.md` | How a new agent joins in five minutes. |
 | `docs/handoff-tailscale-connectivity.md` | What to do when the store connection flakes. |
+| `docs/threejs/index.md` | Three.js agent knowledge base hub: core architecture, API cheatsheet, shaders, pitfalls, worked example. |
+| `docs/basecamp/basecamp-ops.md` | Basecamp 5 fleet operations: CLI, auth quirks, account <basecamp-account-id> (2026-08-26 setup notes). |
+| `docs/basecamp/cli-reference.md` | Basecamp 5 CLI verified reference v0.9.1: install, auth, every tool group, error codes, live corrections. |
 
 ## The commands
 

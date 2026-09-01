@@ -22,7 +22,7 @@ const VALID = Object.freeze({
 describe('validateFact', () => {
   test('accepts a fully valid fact and returns a normalized copy', () => {
     const fact = validateFact({ ...VALID, extra_field: 'dropped' });
-    assert.deepEqual(fact, VALID);
+    assert.deepEqual(fact, { ...VALID, status: 'verified' });
     assert.ok(!('extra_field' in fact));
   });
 

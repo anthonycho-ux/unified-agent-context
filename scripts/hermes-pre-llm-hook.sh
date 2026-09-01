@@ -4,6 +4,9 @@
 # stdin: hermes JSON payload / stdout: {"context": "..."} 또는 없음.
 set -euo pipefail
 
+# node/python3 may live outside the minimal launch PATH (e.g. ~/.local/bin, homebrew).
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 
@@ -20,6 +23,12 @@ if [ "$IS_FIRST" != "1" ]; then
 fi
 
 BLOCK=$(node "$REPO_ROOT/scripts/inject-context.mjs" 2>/dev/null || true)
-if [ -n "$BLOCK" ]; then
-  printf '%s' "$BLOCK" | python3 -c 'import json,sys; print(json.dumps({"context": sys.stdin.read()}))'
+REG_BLOCK=$(bash "${HERMES_HOME:-${HOME:-/home/user}/.hermes}/scripts/agent-registry-inject.sh" 2>/dev/null || true)
+
+if [ -n "$BLOCK" ] || [ -n "$REG_BLOCK" ]; then
+  if [ -n "$BLOCK" ] && [ -n "$REG_BLOCK" ]; then
+    printf '%s\n\n%s\n' "$BLOCK" "$REG_BLOCK" | python3 -c 'import json,sys; print(json.dumps({"context": sys.stdin.read()}))'
+  else
+    printf '%s\n' "$BLOCK$REG_BLOCK" | python3 -c 'import json,sys; print(json.dumps({"context": sys.stdin.read()}))'
+  fi
 fi

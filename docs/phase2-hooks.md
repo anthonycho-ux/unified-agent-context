@@ -14,6 +14,7 @@
 | hermes (store-host) | 동일 `pre_llm_call` 훅 — store-host 배포본 `~/unified-agent-context` 사용 (스토어는 local 직결) | `store-host:~/.hermes/config.yaml` hooks 블록 (백업: `config.yaml.bak-uac-20260708`) | **라이브 검증 완료 (2026-07-08)** — 배선 전 프로브 "모른다" → 배선 후 Pending Actions Board 전역 선호를 정확히 암송 | 훅 지원 |
 | codex | 세션 시작 훅 부재 → **지시 기반 pull** (AGENTS.md 지시 + MCP 도구 직접 호출) | `~/.codex/config.toml` [mcp_servers.unified-memory], `~/.codex/AGENTS.md` 공유 컨텍스트 지시 | 배선 완료 | **확인된 하네스 제약** — 수동/지시 pull 폴백 (플랜 허용 조건) |
 | lettacode | 이 머신에 CLI 미설치 — 바이너리/설정 디렉토리 미발견 | 온보딩 문서의 표준 절차(MCP 연결 + 훅 설정) 적용 대상 | 미배선 (환경 부재) | **확인된 하네스 제약** — 설치 후 표준 온보딩 절차로 합류 |
+| kimi | `UserPromptSubmit` 훅 (세션당 첫 프롬프트에 stdout 주입) + MCP `unified-memory` + `~/.agents/AGENTS.md` 지시 폴백 | `~/.kimi-code/config.toml` [[hooks]], `~/.kimi-code/mcp.json`, 스크립트 `scripts/kimi-user-prompt-hook.sh` | 배선 완료 (`onboard-agent.mjs --harness kimi` 적용, 합성 페이로드 훅 테스트 통과) | 훅 지원 |
 
 모든 하네스는 훅 주입과 별개로 MCP 도구(`context_save`/`context_get`/`context_search_all`)로 세션 중 온디맨드 검색/기록이 가능하다.
 
