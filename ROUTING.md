@@ -54,3 +54,7 @@ CLI or gjc(healthy-provider) as above.
 - **Verify before believing a routing fact.** A sandboxed agent (e.g. Aside/Sol)
   may not see `~/.local/bin` or `~/.codex*` paths and can wrongly conclude a worker
   is "missing." Confirm on the real host before rewriting shared facts.
+
+## Visible-lane orchestration (2026-09-04, the user-verified)
+
+Multi-step implementation work defaults to herdr coding-agent panes (grok/claude etc.) in a task-named workspace: the user watches work live in his herdr UI, dispatching agent verifies via herdr agent read and integrates. Short lookups and parallel research may stay on aside subagents. Hidden-lane principle: any dark-room subagent expected to run 2+ minutes needs a visible herdr mirror or starts in herdr instead. sov-side builds: run the command inside a herdr pane over ssh so work stays visible. Evidence 2026-09-04: grok agent cndream-observer spawned by Sol (Aside) in workspace cndream-showcase; the user watched live and confirmed the workflow.
