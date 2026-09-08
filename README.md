@@ -61,6 +61,9 @@ In plain words.
 ```sh
 node scripts/inject-context.mjs [--cwd <dir>]        # print the shared context block
 node scripts/record-fact.mjs --type decision "..."   # explicit record (secrets blocked with exit 3)
+                                                     # v2.1: --author <agent>, near-dup gate keeps
+                                                     # duplicates as DUPLICATE and corrections tombstone
+                                                     # the predecessor (superseded_by)
 node scripts/distill-session.mjs --file <transcript> # distill a session + quarantine sweep
 node scripts/librarian-sync.mjs [--strict]           # deliver outbox → store-host librarian inbox (Phase 5)
 node scripts/doctor.mjs                              # wiring self-check
