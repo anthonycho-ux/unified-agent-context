@@ -115,7 +115,7 @@ export function validateFact(obj) {
     throw new SchemaError(issues);
   }
 
-  return {
+  const normalized = {
     statement: obj.statement,
     fact_type: obj.fact_type,
     scope: obj.scope,
@@ -128,6 +128,11 @@ export function validateFact(obj) {
     // status 없는 기존 팩트는 verified로 간주 (하위 호환)
     status: obj.status ?? 'verified',
   };
+  // v2.1 schema extension: author (누가 썼는가)와 superseded_by (무엇을 대신했는가)
+  // 는 선택 필드다. 정의된 경우에만 실려 나간다 (구 deepEqual 호환).
+  if (obj.author !== undefined) normalized.author = obj.author;
+  if (obj.superseded_by !== undefined) normalized.superseded_by = obj.superseded_by;
+  return normalized;
 }
 
 export function makeFact(partial) {
@@ -152,5 +157,6 @@ export function makeFact(partial) {
     retention_class: retentionClass,
     sensitivity_class: partial.sensitivity_class ?? 'normal',
     status: partial.status ?? 'verified',
+    author: partial.author ?? process.env.UAC_AGENT ?? 'unknown',
   });
 }

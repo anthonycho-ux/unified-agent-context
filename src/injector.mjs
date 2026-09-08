@@ -60,7 +60,9 @@ function factTime(fact) {
 }
 
 export function selectForInjection(facts, limit) {
-  const eligible = facts.filter((f) => f.status !== 'proposed');
+  // tombstone 처리된 팩트(superseded_by 보유)는 주입하지 않는다 —
+  // lineage는 남아 있되 살아있는 팩트만 세션에 들어간다.
+  const eligible = facts.filter((f) => f.status !== 'proposed' && !f.superseded_by);
   const selected = [...eligible].sort((a, b) => factTime(b) - factTime(a)).slice(0, limit);
   return { selected, omitted: facts.length - selected.length };
 }
