@@ -75,6 +75,24 @@ Contract:
 - **Ending.** Quiet is the rule, formula is not. Reusing the same what-remains ending every time is itself an AI tell; vary the closing shape.
 - **Shared rules.** The punctuation hard rules and anti-AI-tell list from Procedure apply verbatim to the rewrite. The skeleton rule applies: a rewrite that keeps a numbered or bulleted skeleton is a failed draft, regardless of the register it wears.
 
+## Proofread pass for open-weight Korean output
+
+Trigger: Korean text written by an open-weight model (Gemma, GLM, Qwen, Llama, or any locally hosted model) that will be shown to the user or published. Closed-model drafts can skip to the voice pass when time is tight; open-weight output must always run the machine pass first, because its Korean carries a failure fingerprint the generator cannot see in itself.
+
+The fingerprint, checked in this order:
+
+- **Register drift.** Formal 합니다체 or textbook tone where the target register is plain 평서체 or 구어체, and mid-text switching between polite and plain endings.
+- **Translationese.** English sentence shapes mapped word for word: front-loaded clauses, stiff word order, idioms translated literally.
+- **Mechanics.** 띄어쓰기 spacing errors, particle (조사) slips, number and unit formatting, stiff Sino-Korean where a plain word fits.
+- **AI tells in Korean.** 그러나 or 하지만 openers, exactly-three triads, signposting like 결론부터 말하면, uniform sentence lengths, bold or bullet skeletons leaking into prose.
+
+Procedure: two passes, in order, never merged.
+
+1. **Machine pass, mechanics only.** Run the `gemma4-proofread` skill: Gemma 4 26B through the hosted gateway with thinking off, returning 수정본 plus 요약. Treat the 수정본 as suggested corrections: diff it against the source and reject any edit that flattens the register or changes meaning. The proofreader is a mechanic, not an editor.
+2. **Voice pass, this skill.** Apply the punctuation hard rules, the AI-tell list, and the skeleton rule to the corrected text, not the original, then run the read-aloud test from Verification.
+
+If the machine pass and the voice rules conflict, the voice rules win: re-apply the mechanics fix by hand on top of the voice-correct text.
+
 ## Verification
 
 Read it aloud in your head. If it sounds like 김훈 wrote a text message to a smart friend, ship it. If it sounds like a professor, a deck, or a language model, rewrite it shorter, warmer, drier. Then run the skeleton test: cover the voice and look at the bones. If a labeled-list skeleton survives under the register, the draft failed, rewrite it as flowing prose. Last scan before sending, hunt for dashes, colons, and triads, those three give away most AI text. For a transformation-mode draft, cover the source after writing and check fidelity: every name and number came from the source, the length holds against the input, and the closing is not the same shape as the last rewrite.
