@@ -6,7 +6,7 @@ Design a practical UAC discussion lane so the user can ask Hermes to discuss a t
 
 ## Current observed state
 
-Hermes verified UAC at `/home/dev/unified-agent-context`.
+Hermes verified UAC at the repository checkout (path is machine-local).
 
 - `record-fact.mjs` works.
 - `inject-context.mjs` works.

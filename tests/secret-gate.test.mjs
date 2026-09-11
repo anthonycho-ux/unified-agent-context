@@ -22,6 +22,15 @@ const pemBlock = `-----BEGIN ${'PRIVATE KEY'}-----\n${'MIIEvQIBADANBgkqhkiG9w0BA
 const bearerToken = `eyJhbGciOiJIUzI1NiIs${'InR5cCI6IkpXVCJ9'}`;
 const passwordValue = `correct-horse-${'battery-staple'}`;
 const envSecretValue = `super${'secretvalue'}`;
+const githubPat = `ghp_${'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8'}`;
+const githubFinePat = `github_pat_${'11ABCDEFG0'}_${'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6'}`;
+const googleApiKey = `AIza${'SyD4ummYFak3K3yF0rT3st1ngPurp0ses'}`;
+const slackToken = `xoxb-${'123456789012'}-${'123456789012'}-${'FAKETOKENFAKETOKENFAKETOK'}`;
+const stripeLiveKey = `sk_${'live'}_${'4eC39HqLyjWDarjtT1zdp7dc'}`;
+const stripeTestKey = `sk_${'test'}_${'4eC39HqLyjWDarjtT1zdp7dc'}`;
+const jwtToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${'eyJzdWIiOiIxMjM0NTY3ODkwIn0'}.${'dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U'}`;
+const sendgridKey = `SG.${'FAKEKEYFAKEKEYFAKEKE'}.${'FAKESECRETFAKESECRETFAKESECRETFAKESECRETFAK'}`;
+const hexSecret = `0123456789abcdef${'0123456789abcdef'}`;
 
 const SECRET_CASES = [
   {
@@ -53,6 +62,51 @@ const SECRET_CASES = [
     name: 'env-style SECRET assignment',
     text: `MY_SERVICE_${'SECRET'}=${envSecretValue}`,
     rawSecret: envSecretValue,
+  },
+  {
+    name: 'GitHub PAT (ghp_)',
+    text: `깃허브 토큰은 ${githubPat} 였다.`,
+    rawSecret: githubPat,
+  },
+  {
+    name: 'GitHub fine-grained PAT (github_pat_)',
+    text: `token: ${githubFinePat}`,
+    rawSecret: githubFinePat,
+  },
+  {
+    name: 'Google API key',
+    text: `key = ${googleApiKey}`,
+    rawSecret: googleApiKey,
+  },
+  {
+    name: 'Slack bot token',
+    text: `SLACK_TOKEN=${slackToken}`,
+    rawSecret: slackToken,
+  },
+  {
+    name: 'Stripe live key',
+    text: `stripe key: ${stripeLiveKey}`,
+    rawSecret: stripeLiveKey,
+  },
+  {
+    name: 'Stripe test key',
+    text: `stripe key: ${stripeTestKey}`,
+    rawSecret: stripeTestKey,
+  },
+  {
+    name: 'JWT',
+    text: `access token was ${jwtToken}`,
+    rawSecret: jwtToken,
+  },
+  {
+    name: 'SendGrid API key',
+    text: `SENDGRID_KEY=${sendgridKey}`,
+    rawSecret: sendgridKey,
+  },
+  {
+    name: 'unlabeled high-entropy hex (32 chars)',
+    text: `seed: ${hexSecret}`,
+    rawSecret: hexSecret,
   },
 ];
 

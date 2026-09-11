@@ -42,11 +42,10 @@ function parseArgs(argv) {
   }
   args.historyFile ??= path.join(path.dirname(args.dataDir), 'maintenance', 'fitness-history.jsonl');
   if (args.strayDbs.length === 0) {
-    // 알려진 좌표 후보: 예전 설치 잔재가 발견된 위치들.
+    // 알려진 좌표 후보: 예전 설치 잔재가 발견된 위치들 ($HOME-relative).
     args.strayDbs = [
-      '/home/dev/mcp-data/memory-keeper/context.db',
       path.join(os.homedir(), 'mcp-data/memory-keeper/context.db'),
-    ].filter((p, i, a) => a.indexOf(p) === i);
+    ];
   }
   return args;
 }

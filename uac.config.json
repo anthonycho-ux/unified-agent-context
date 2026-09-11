@@ -2,7 +2,7 @@
   "store": {
     "host": "sov-ts",
     "fallbackHosts": ["sov"],
-    "entry": "/home/dev/node_modules/mcp-memory-keeper/dist/index.js",
-    "dataDir": "/home/dev/.uac/data/memory"
+    "entry": "./node_modules/mcp-memory-keeper/dist/index.js",
+    "dataDir": "~/.uac/data/memory"
   }
 }

@@ -2,6 +2,7 @@ import { archiveConversation } from './archive.mjs';
 import { ContextStore } from './store-adapter.mjs';
 import { makeFact } from './schema.mjs';
 import { assertSafe, SecretBlockedError } from './secret-gate.mjs';
+import { llmExtractCandidates } from './llm-extract.mjs';
 
 const DECISION_MARKERS = /(결정|하기로|채택|전환|사용한다|decided|we will|adopt)/i;
 const PREFERENCE_MARKERS = /(선호|항상|앞으로는|always|prefer)/i;
@@ -36,13 +37,38 @@ export function extractCandidates(text) {
   return candidates;
 }
 
+// LLM 증류 사용 여부 (opt-in). 기본은 규칙 기반 extractCandidates.
+// UAC_DISTILL_LLM=1|true|on|yes 이면 LLM 추출을 시도하고, 실패 시 규칙 기반으로 폴백한다.
+function llmDistillEnabled() {
+  const flag = String(process.env.UAC_DISTILL_LLM ?? '').toLowerCase();
+  return flag === '1' || flag === 'true' || flag === 'on' || flag === 'yes';
+}
+
+/**
+ * 후보 추출기 해석: 인젝션된 extract 함수 > (opt-in) LLM 추출 > 규칙 기반 폴백.
+ * 어떤 경우에도 배열을 반환한다 (LLM 실패는 null → 규칙 기반으로 폴백).
+ */
+async function resolveCandidates(content, extract) {
+  if (typeof extract === 'function') {
+    const injected = await extract(content);
+    return Array.isArray(injected) ? injected : extractCandidates(content);
+  }
+  if (llmDistillEnabled()) {
+    const viaLlm = await llmExtractCandidates(content);
+    if (Array.isArray(viaLlm)) return viaLlm;
+  }
+  return extractCandidates(content);
+}
+
 /**
  * 세션 종료 자동 증류(auto_distill):
+ * 후보 추출(규칙 기반 기본, UAC_DISTILL_LLM 시 LLM) →
  * 후보별 비밀 게이트(fail-closed: 비밀 후보는 저장하지 않음) → dedupe upsert 저장 →
  * 원본은 archive_ingest 경로로 콜드 아카이브(비밀 시 redact-only).
+ * @param {Function} [extract] 선택적 추출기 오버라이드(content)=>[{statement,fact_type}] (동기/비동기).
  */
-export async function distillSession({ content, scope, sessionId, store }) {
-  const candidates = extractCandidates(content);
+export async function distillSession({ content, scope, sessionId, store, extract }) {
+  const candidates = await resolveCandidates(content, extract);
 
   const connected = store ?? (await ContextStore.connect());
   let stored = 0;
