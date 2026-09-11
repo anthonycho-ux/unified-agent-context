@@ -13,3 +13,5 @@ docs/handoffs/claude-desktop-dealer-routine.md
 # local agent tooling + scratch data (never publish)
 .kimi-code/
 artifacts/tableau-votd/
+
+.commandcode/

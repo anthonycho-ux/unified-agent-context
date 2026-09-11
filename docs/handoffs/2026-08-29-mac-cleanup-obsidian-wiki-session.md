@@ -20,7 +20,7 @@
   (never write to the old iCloud path)
 - Karpathy LLM Wiki plugin (`karpathywiki`, already installed, previously stalled since Aug 3)
   is now configured and verified working: routes through the user's own CC-PROXY
-  (`http://<tailscale-ip>:8791/v1`, model `z-ai/glm-5.3-flash`), `llm_config_status: ok`
+  (`sov-ts (local inference endpoint)`, model `z-ai/glm-5.3`), `llm_config_status: ok`
   confirmed by direct file read, not just the plugin's own claim.
 - `Inbox unclassified` (a separate small vault, 1 real note) merged into
   `sources/Inbox unclassified/` inside partnership-journal; `watchedFolders` points there.
