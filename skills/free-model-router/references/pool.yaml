@@ -1,0 +1,462 @@
+# Free model pool — last live probe 2026-08-17 (Linux, letta lc-local-backend)
+# Statuses: ok | unknown | dead. Always probe before committing (statuses rot fast).
+# Secrets: NEVER paste keys here. Reference env var / secret-store names only.
+# Keep this pool growing: see references/discovery.md for how to find new
+# free providers via free search engines / bots, and add `discovered_via` +
+# `last_searched` to every entry so stale ones are visible.
+
+channels:  # free discovery channels worth checking when expanding the pool
+  - id: web-search
+    how: built-in web_search tool
+    cost: free
+  - id: grok-free
+    how: ask Grok free tier (X / grok.com) to list current free LLM API offers
+    cost: free, rate-limited
+  - id: aside-browser
+    how: local `aside` wrapper -> MacBook AI browser for JS-heavy/WAF-blocked
+        search pages (Google, Bing, Brave)
+    cost: free
+  - id: hn-reddit-x
+    how: watch HN Show HN / provider accounts on X / r-LocalLLaMA roundups
+    cost: free
+
+# 2026-08-17 probe: all 11 previously-ok keyless routes still answered.
+# First truly-free live route: opencode/deepseek-v4-flash-free (PONG).
+# Letta agent still answers, but its pin drifted off
+# stepfun:free onto openai-compatible/deepseek-v4-flash — treat that
+# agent as "alive", not as a guaranteed free slot.
+# BYOK routes (groq/gemini/cerebras/openrouter/cf/github/nvidia/hf)
+# stay unknown: no matching API-key env vars on this machine today.
+# New kilo :free catalog ids added as unknown (listed by `opencode models kilo`).
+
+routes:
+  - id: letta-agent-c3ece27a
+    type: letta
+    target: "letta ${LETTA_AGENT_ID}"
+    model: openai-compatible/deepseek-v4-flash
+    cost: unknown
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    notes: >
+      Letta Code agent still answers a 1-token `letta -p ping`. Model pin
+      drifted since 2026-08-14 (was openai-compatible/stepfun/step-3.7-flash:free).
+      Alive, but do NOT assume it is still a free slot. For guaranteed-free
+      Letta-adjacent work, use kilo-stepfun-free or opencode-deepseek-v4-flash-free.
+
+  - id: opencode-deepseek-v4-flash-free
+    type: opencode
+    target: opencode provider slot
+    model: opencode/deepseek-v4-flash-free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    notes: >
+      PRIMARY free route as of 2026-08-17. Live probe: `opencode run` -> PONG.
+      Also listed in `opencode models opencode`. Free tier may cap per-hour.
+
+  - id: opencode-big-pickle
+    type: opencode
+    target: opencode provider slot
+    model: opencode/big-pickle
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    notes: >
+      OpenCode Zen stealth model, free for limited time per route-prices.json.
+      Live probe 2026-08-17: opencode run -> PONG.
+
+  # --- New finds from discovery run 2026-08-14 (web_search -> freellm.net,
+  #     daily-updated directory of 435+ free LLM APIs). All status: unknown —
+  #     needs a real key + live probe before use. Signup mostly no-credit-card.
+
+  - id: groq
+    type: openai-compatible
+    target: openai-compatible slot (https://api.groq.com/openai/v1)
+    model: llama-3.3-70b-versatile
+    cost: free
+    byok: true
+    status: unknown
+    verified: "2026-08-14"
+    last_searched: "2026-08-17"
+    discovered_via: web_search (freellm.net)
+    notes: >
+      No credit card. 30 RPM, 14,400 RPD. Key: console.groq.com/keys.
+      Also: moonshotai/kimi-k2-instruct on free tier.
+      2026-08-17: no GROQ_API_KEY in env — cannot probe.
+
+  - id: google-gemini
+    type: openai-compatible
+    target: openai-compatible slot (https://generativelanguage.googleapis.com/v1beta/openai/)
+    model: gemini-3.5-flash
+    cost: free
+    byok: true
+    status: unknown
+    verified: "2026-08-14"
+    last_searched: "2026-08-17"
+    discovered_via: web_search (freellm.net)
+    notes: >
+      No credit card. 15 RPM / 1,500 RPD. Key: aistudio.google.com/app/apikey.
+      Free quota cut in late 2025 — re-check limits before relying on it.
+      2026-08-17: no Gemini key in env — cannot probe.
+
+  - id: cerebras
+    type: openai-compatible
+    target: openai-compatible slot (https://api.cerebras.ai/v1)
+    model: gpt-oss-120b
+    cost: free
+    byok: true
+    status: unknown
+    verified: "2026-08-14"
+    last_searched: "2026-08-17"
+    discovered_via: web_search (freellm.net)
+    notes: >
+      No credit card. 5 RPM, 30K TPM, 1M tokens/day — biggest daily free
+      volume. Key: cloud.cerebras.ai.
+      2026-08-17: no CEREBRAS_API_KEY in env — cannot probe.
+
+  - id: openrouter-free
+    type: openai-compatible
+    target: openai-compatible slot (https://openrouter.ai/api/v1)
+    model: nvidia/nemotron-3-ultra-550b-a55b:free
+    cost: free
+    byok: true
+    status: unknown
+    verified: "2026-08-14"
+    last_searched: "2026-08-17"
+    discovered_via: web_search (freellm.net)
+    notes: >
+      No card for :free models. ~20 RPM, 50 req/day (1,000/day after one-time
+      $10 topup). One key fans out to many :free models — pool multiplier.
+      2026-08-17: no OPENROUTER_API_KEY in env — cannot probe. Use
+      kilo-openrouter-free instead (keyless, PONG today).
+
+  - id: cloudflare-workers-ai
+    type: openai-compatible
+    target: openai-compatible slot (https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run)
+    model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    cost: free
+    byok: true
+    status: unknown
+    verified: "2026-08-14"
+    last_searched: "2026-08-17"
+    discovered_via: web_search (freellm.net)
+    notes: >
+      No credit card. 39 free models, 10M context. Key: dash.cloudflare.com
+      profile api tokens. Needs account_id in base URL.
+      2026-08-17: no Cloudflare key in env — cannot probe.
+
+  - id: github-models
+    type: openai-compatible
+    target: openai-compatible slot (https://models.github.ai/inference)
+    model: Phi-4
+    cost: free
+    byok: true
+    status: unknown
+    verified: "2026-08-14"
+    last_searched: "2026-08-17"
+    discovered_via: web_search (freellm.net)
+    notes: >
+      No credit card. 16 free models, 1M context. Key: github.com/marketplace/
+      models. Great for a GitHub user — likely zero new signup friction.
+      2026-08-17: no GitHub models token used for probe.
+
+  - id: nvidia-nim
+    type: openai-compatible
+    target: openai-compatible slot (https://integrate.api.nvidia.com/v1)
+    model: z-ai/glm-5.2
+    cost: free
+    byok: true
+    status: unknown
+    verified: "2026-08-14"
+    last_searched: "2026-08-17"
+    discovered_via: web_search (freellm.net)
+    notes: >
+      Phone verification required. 125 free models, 1M context, up to 40 RPM.
+      Key: build.nvidia.com/settings/api-keys. Strong candidate — GLM-5.2.
+      2026-08-17: no NVIDIA key in env — cannot probe. kilo-glm-5.2-free
+      is the keyless stand-in (catalog-listed, not live-probed).
+
+  - id: huggingface
+    type: openai-compatible
+    target: openai-compatible slot (https://router.huggingface.co/v1)
+    model: gemma-3-4b-it
+    cost: free
+    byok: true
+    status: unknown
+    verified: "2026-08-14"
+    last_searched: "2026-08-17"
+    discovered_via: web_search (freellm.net)
+    notes: >
+      No credit card. Rate-limited free tier, credit-metered. Key:
+      huggingface.co/settings/tokens. Many open-weight models.
+      2026-08-17: no HF token in env — cannot probe.
+
+  # --- opencode / kilo registered FREE slots. Probe via `opencode models`
+  #     then a live `opencode run` before committing.
+
+  - id: opencode-hy3-free
+    type: opencode
+    target: opencode provider slot
+    model: opencode/hy3-free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models (local)
+    notes: >
+      Tencent Hunyuan free slot. Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: opencode-nemotron-3-ultra-free
+    type: opencode
+    target: opencode provider slot
+    model: opencode/nemotron-3-ultra-free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models (local)
+    notes: >
+      NVIDIA Nemotron 3 Ultra free slot. 1M context.
+      Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: opencode-laguna-s-2.1-free
+    type: opencode
+    target: opencode provider slot
+    model: opencode/laguna-s-2.1-free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models (local)
+    notes: >
+      Poolside Laguna S 2.1 free slot. 262K context.
+      Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: opencode-mimo-v2.5-free
+    type: opencode
+    target: opencode provider slot
+    model: opencode/mimo-v2.5-free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models (local)
+    notes: >
+      Xiaomi MiMo V2.5 free slot.
+      Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: opencode-nemotron-3.5-lightning-free
+    type: opencode
+    target: opencode provider slot
+    model: opencode/nemotron-3.5-lightning-free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models (local)
+    notes: >
+      NVIDIA Nemotron 3.5 Lightning free slot.
+      Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: kilo-openrouter-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/openrouter/free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Kilo's OpenRouter free passthrough — fans out to many :free models.
+      Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: kilo-stepfun-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/stepfun/step-3.7-flash:free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      StepFun 3.7 Flash free via Kilo — same model family as the old
+      letta-agent-stepfun pin. Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: kilo-nemotron-3-ultra-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/nvidia/nemotron-3-ultra-550b-a55b:free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      NVIDIA Nemotron 3 Ultra 550B free via Kilo. 1M context.
+      Live probe 2026-08-17: opencode run -> PONG.
+
+  # --- New kilo :free catalog ids seen 2026-08-17. Added unknown until a
+  #     live `opencode run` PONG. Listed by `opencode models kilo`.
+
+  - id: kilo-auto-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/kilo-auto/free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Kilo auto-router on the free tier. Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: kilo-glm-5.2-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/z-ai/glm-5.2:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      GLM-5.2 free via Kilo. Catalog-listed, but 2026-08-17 live call failed:
+      "No endpoints found that support tool use." Not dead — just unusable
+      for tool-calling work. Do not route agent tasks here.
+
+  - id: kilo-hy3-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/tencent/hy3:free
+    cost: free
+    byok: false
+    status: ok
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Tencent Hunyuan via Kilo (twin of opencode-hy3-free).
+      Live probe 2026-08-17: opencode run -> PONG.
+
+  - id: kilo-laguna-s-2.1-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/poolside/laguna-s-2.1:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Poolside Laguna S 2.1 via Kilo. Catalog-listed; not live-probed.
+
+  - id: kilo-laguna-xs-2.1-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/poolside/laguna-xs-2.1:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Poolside Laguna XS 2.1 via Kilo. Catalog-listed; not live-probed.
+
+  - id: kilo-nemotron-3.5-lightning-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/nvidia/nemotron-3.5-lightning:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Nemotron 3.5 Lightning via Kilo (twin of opencode-nemotron-3.5-lightning-free).
+      Catalog-listed; not live-probed.
+
+  - id: kilo-nemotron-3-super-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/nvidia/nemotron-3-super-120b-a12b:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Nemotron 3 Super 120B free via Kilo. Catalog-listed; not live-probed.
+
+  - id: kilo-nemotron-3-nano-omni-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Nemotron 3 Nano Omni reasoning free via Kilo. Catalog-listed; not live-probed.
+
+  - id: kilo-cohere-north-mini-code-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/cohere/north-mini-code:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Cohere North Mini Code free via Kilo. Catalog-listed; not live-probed.
+
+  - id: kilo-liquid-lfm-2.5-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/liquid/lfm-2.5-2.6b:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Liquid LFM 2.5 2.6B free via Kilo. Small/fast. Catalog-listed; not live-probed.
+
+  - id: kilo-dots-3-note-preview-free
+    type: opencode
+    target: opencode provider slot (kilo)
+    model: kilo/dots-studio/dots-3-note-preview:free
+    cost: free
+    byok: false
+    status: unknown
+    verified: "2026-08-17"
+    last_searched: "2026-08-17"
+    discovered_via: opencode models kilo (local)
+    notes: >
+      Dots 3 Note preview free via Kilo. Catalog-listed; not live-probed.

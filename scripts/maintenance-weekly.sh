@@ -4,9 +4,9 @@
 # fitness는 읽기 전용, cleanup만 승인된 대상(feature flag 평가 로그 7일+)을 삭제한다.
 set -uo pipefail
 
-UAC=/home/user/unified-agent-context
-DATA=/home/user/.uac/data/memory
-MAINT=/home/user/.uac/maintenance
+UAC="${UAC_REPO_DIR:-$HOME/unified-agent-context}"
+DATA="${UAC_DATA_DIR:-$HOME/.uac/data/memory}"
+MAINT="${UAC_MAINT_DIR:-$HOME/.uac/maintenance}"
 STAMP=$(date +%F)
 
 mkdir -p "$MAINT/reports"

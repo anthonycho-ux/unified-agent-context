@@ -1,10 +1,19 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..');
+
+// "~/..."을 실제 홈 디렉터리로 확장 (설정 파일을 기기 독립적으로 유지).
+function expandHome(p) {
+  if (typeof p !== 'string') return p;
+  if (p === '~') return os.homedir();
+  if (p.startsWith('~/')) return path.join(os.homedir(), p.slice(2));
+  return p;
+}
 
 export const DATA_DIR = process.env.UAC_DATA_DIR ?? path.join(repoRoot, 'data', 'memory');
 export const ARCHIVE_DIR = process.env.UAC_ARCHIVE_DIR ?? path.join(repoRoot, 'data', 'archive');
@@ -59,7 +68,7 @@ function resolveServerSpec() {
     return [localSpec];
   }
 
-  const localStoreSpec = { command: 'node', args: [store.entry], env: { DATA_DIR: store.dataDir } };
+  const localStoreSpec = { command: 'node', args: [store.entry], env: { DATA_DIR: expandHome(store.dataDir) } };
 
   // 명시 오버라이드: UAC_STORE_HOST가 있으면 그 호스트만 사용 (폴백 없음).
   const overrideHost = process.env.UAC_STORE_HOST;
@@ -87,7 +96,7 @@ function sshSpec(host, store) {
       '-o', 'BatchMode=yes',
       '-o', 'ConnectTimeout=10',
       host,
-      `DATA_DIR='${store.dataDir}' exec node '${store.entry}'`,
+      `DATA_DIR='${expandHome(store.dataDir)}' exec node '${store.entry}'`,
     ],
     env: {},
   };

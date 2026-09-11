@@ -44,13 +44,13 @@ The underlying write/read path already works end-to-end, exercised manually on
 2. Readback verified via `node scripts/inject-context.mjs` (all four statements
    present in the injection block).
 3. Canonical persistence verified on store-host:
-   `grep -rl "strongest-critic" /home/user/.uac/data/memory/` →
-   `/home/user/.uac/data/memory/context.db`.
+   `grep -rl "strongest-critic" ~/.uac/data/memory/` →
+   `~/.uac/data/memory/context.db`.
 
 The digest bus reuses exactly this pipeline (`src/recorder.mjs` →
 `src/store-adapter.mjs` → ssh stdio-MCP `mcp-memory-keeper` on store-host, per
 `uac.config.json`: host `store-host-ts`, fallback `store-host`, dataDir
-`/home/user/.uac/data/memory`). What's new is a fact shape for digests, a
+`~/.uac/data/memory`). What's new is a fact shape for digests, a
 session-end hook per agent, and a digest section in the injection block.
 
 ## Requirements
@@ -158,7 +158,7 @@ session-end hook per agent, and a digest section in the injection block.
 
 ## Acceptance tests
 
-1. **Write + persist**: `record-digest.mjs --agent claude-code --session t1 "did: test"` exits 0, prints `RECORDED <key> <scope>`, and the statement is present in `/home/user/.uac/data/memory/context.db` on store-host within 60s.
+1. **Write + persist**: `record-digest.mjs --agent claude-code --session t1 "did: test"` exits 0, prints `RECORDED <key> <scope>`, and the statement is present in `~/.uac/data/memory/context.db` on store-host within 60s.
 2. **Readback**: after (1), `inject-context.mjs --digests --days 1` prints the digest; plain `inject-context.mjs` includes it in the fleet-digests section.
 3. **Secret gate**: a digest body containing a fake `sk-...`-style token is rejected (exit 3, `BLOCKED`), and nothing is written to the store or spool.
 4. **Degraded mode**: with store-host unreachable (e.g. bogus `UAC_STORE_HOST` override), record-digest exits 0, warns on stderr, spools to `data/digest-outbox/`; next successful run flushes the spool and the digest appears in the store.

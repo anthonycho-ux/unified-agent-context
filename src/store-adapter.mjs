@@ -165,7 +165,7 @@ export class ContextStore {
         await client.connect(transport);
         // 하네스 출처 추적: UAC_SESSION_NAME이 있으면 그 이름의 세션을 시작한다.
         // (서버는 session_start마다 새 세션 행을 만들며, 공개 항목은 세션을 넘어 읽힌다.)
-        // 실패필 때 기록 자체가 막히지 않도록 경고 후 기본 세션으로 진행한다.
+        // 실패할 때 기록 자체가 막히지 않도록 경고 후 기본 세션으로 진행한다.
         const sessionName = process.env.UAC_SESSION_NAME;
         if (sessionName) {
           try {

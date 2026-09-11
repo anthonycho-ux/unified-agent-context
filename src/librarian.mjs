@@ -22,10 +22,14 @@ import { validateFact } from './schema.mjs';
 export const LIBRARIAN_DIR = process.env.UAC_LIBRARIAN_DIR ?? path.join(DATA_DIR, 'librarian');
 export const LIBRARIAN_SPEC = Object.freeze({
   enabled: process.env.UAC_LIBRARIAN !== '0',
-  host: process.env.UAC_LIBRARIAN_HOST ?? 'store-host',
+  host: process.env.UAC_LIBRARIAN_HOST ?? process.env.UAC_SOV_HOST ?? 'store-host',
   inbox:
     process.env.UAC_LIBRARIAN_INBOX ??
-    '/home/user/.letta/agents/agent-e3b792d4-08b2-4b36-9016-aafd1a2a9c7f/memory/reference/inbox',
+    process.env.UAC_NOTICER_INBOX ??
+    path.join(
+      process.env.HOME ?? '',
+      '.letta/agents/<your-agent-uuid>/memory/reference/inbox',
+    ),
 });
 
 const OUTBOX = () => path.join(LIBRARIAN_DIR, 'outbox.jsonl');

@@ -13,7 +13,7 @@ over SSH stdio-MCP. Config: `uac.config.json`. Host resolution: `src/config.mjs`
 `scripts/inject-context.mjs`.
 
 ## The problem
-store-host is reachable two ways: SSH alias `store-host` (LAN, e.g. 172.16.0.46) and `store-host-ts` (Tailscale).
+store-host is reachable two ways: SSH alias `store-host` (LAN, e.g. <lan-ip>) and `store-host-ts` (Tailscale).
 The owner **often leaves Tailscale on at home and forgets to turn it off**, so connectivity
 state is inconsistent:
 - Tailscale ON (home or away): `store-host-ts` works; LAN `store-host` may or may not.
