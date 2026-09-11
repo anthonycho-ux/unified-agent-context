@@ -13,3 +13,5 @@ docs/private/agent-routine.md
 # local agent tooling + scratch data (never publish)
 .kimi-code/
 artifacts/tableau-votd/
+
+.commandcode/
