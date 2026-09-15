@@ -16,6 +16,8 @@ data/
 .omc/
 artifacts/**/*.db-shm
 artifacts/**/*.db-wal
+# test-run transcripts: evidence kept out of the published tree
+artifacts/g00*
 docs/handoffs/claude-desktop-dealer-routine.md
 
 # local agent tooling + scratch data (never publish)

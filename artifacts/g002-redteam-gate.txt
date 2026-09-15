@@ -1,8 +1,0 @@
-== G002 gate-bypass red-team 2026-07-07T10:36:19.235Z ==
-BLOCKED(sk_api_key): "[PUBLIC_TEST_SECRET_REDACTED]"
-BLOCKED(aws_akia_key): "[PUBLIC_TEST_SECRET_REDACTED]"
-BLOCKED(pem_private_key): "[PUBLIC_TEST_SECRET_REDACTED]"
-BLOCKED(env_secret_assignment): "[PUBLIC_TEST_SECRET_REDACTED]"
-PASS: 비밀 변형 4종 전부 차단 (blocked=4)
-PASS: 차단 후 영속 0건 (got 0)
-FINDING(non-blocking): source_ref 내 비밀은 저장됨 — 계약상 statement만 스캔 (Phase 3에서 전 필드 스캔 확장 권고)

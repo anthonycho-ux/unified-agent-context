@@ -1,1 +1,0 @@
-{"schemaVersion": 1, "kind": "cli-replay", "replaySafe": true, "command": ["bun", "--version"], "recordedStdout": "1.3.14\n"}
