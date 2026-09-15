@@ -1,5 +1,0 @@
-== G002 scope-leak red-team 2026-07-07T10:36:19.038Z (DATA_DIR=/var/folders/j9/3hvp_j_13mj254m7m60gm8nh0000gn/T/g002-redteam-I8xcCp) ==
-PASS: beta 조회 격리 (got 1)
-PASS: global 조회에 프로젝트 항목 0건 (got 1)
-PASS: 유사 채널명 project:alpha2 미혼입 (got 10)
-PASS: 콜론 포함 채널명 실동작
