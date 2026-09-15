@@ -4,7 +4,7 @@ Paste the block below to a coding agent working on this repo.
 
 ---
 
-You are working on **Unified Agent Context (UAC)** at `/Users/<mac-user>/unified-agent-context`,
+You are working on **Unified Agent Context (UAC)** in this `unified-agent-context` checkout,
 a shared local memory store that multiple AI agents (Claude Code, Codex, Hermes, gajaecode,
 lettacode) read/write so decisions and preferences carry across sessions. The canonical
 store is an `mcp-memory-keeper` MCP server that lives on a self-hosted box **store-host**, reached
@@ -13,7 +13,7 @@ over SSH stdio-MCP. Config: `uac.config.json`. Host resolution: `src/config.mjs`
 `scripts/inject-context.mjs`.
 
 ## The problem
-store-host is reachable two ways: SSH alias `store-host` (LAN, e.g. <lan-ip>) and `store-host-ts` (Tailscale).
+store-host is reachable two ways: SSH alias `store-host` (LAN) and `store-host-ts` (Tailscale).
 The owner **often leaves Tailscale on at home and forgets to turn it off**, so connectivity
 state is inconsistent:
 - Tailscale ON (home or away): `store-host-ts` works; LAN `store-host` may or may not.

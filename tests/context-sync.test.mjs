@@ -235,8 +235,8 @@ test('normalization (unit): a secret in the statement is fail-closed skipped', (
 
 test('normalization (e2e): a Claude Desktop-style row is normalized and pushed to store-host', async () => {
   await withStores(async ({ local, store-host }) => {
-    const statement = 'the user approved Option A for reconcile normalization';
-    await plantClaudeDesktopRow(local, { key: 'anthony_option_a_20260712', statement });
+    const statement = 'User approved Option A for reconcile normalization';
+    await plantClaudeDesktopRow(local, { key: 'user_option_a_20260712', statement });
     const report = await reconcile({ localStore: local, sovStore: store-host });
     assert.equal(report.pushed, 1, 'the normalized fact must be pushed to store-host');
     assert.equal(report.failed, 0);
@@ -300,15 +300,15 @@ test('normalization (e2e): a plain-text decision row is normalized and pushed to
       key: 'ssh_sov_auto_route_20260712',
       value: statement, // bare string, exactly how the real stuck rows were saved
       category: 'decision',
-      channel: 'project:<mac-user>',
+      channel: 'project:example-project',
     });
     const report = await reconcile({ localStore: local, sovStore: store-host });
     assert.equal(report.pushed, 1);
     assert.equal(report.failed, 0);
-    const facts = await store-host.getFacts({ scope: 'project:<mac-user>' });
+    const facts = await store-host.getFacts({ scope: 'project:example-project' });
     assert.equal(facts.length, 1);
     assert.equal(facts[0].statement, statement);
-    assert.equal(facts[0].dedupe_key, dedupeKey(statement, 'project:<mac-user>'));
+    assert.equal(facts[0].dedupe_key, dedupeKey(statement, 'project:example-project'));
     assert.equal(facts[0].source_ref, 'normalized:context_save');
   });
 });

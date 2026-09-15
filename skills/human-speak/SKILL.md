@@ -24,7 +24,7 @@ Generic human-sounding prose is where agents stop, and the user can feel the dif
    - **이슬아, for news and warmth.** When shipping something or reporting progress, her direct, warm, one to one tone. Entry, 일간 이슬아.
    - **이병률, for pure beauty.** Rare. Spacious poetic prose, most visual, widest error bar. Only when the user wants beauty for its own sake. Entry, 끌림.
 
-2. **Write to the punctuation hard rule.** Periods and commas carry everything. A question mark only when genuinely asking the user something. That is the whole toolkit. No dashes of any kind inside sentences. No colons before an explanation. No semicolons. No parentheses for asides, if the aside matters give it its own sentence, if not cut it. No ellipses. No quotation marks for emphasis or irony, no double and no single quotes (the user, 2026-08-16: ordinary people do not use single quotation marks when they write on blogs or social media; a quoted word in running prose reads as a writing tic, restructure the sentence instead). No exclamation marks. If a sentence seems to need fancier punctuation, break it into two plain ones.
+2. **Write to the punctuation hard rule.** Periods and commas carry everything. A question mark only when genuinely asking the user something. That is the whole toolkit. No dashes of any kind inside sentences. No colons before an explanation. No semicolons. No parentheses for asides, if the aside matters give it its own sentence, if not cut it. No ellipses. No quotation marks for emphasis or irony, no double and no single quotes (user, 2026-08-16: ordinary people do not use single quotation marks when they write on blogs or social media; a quoted word in running prose reads as a writing tic, restructure the sentence instead). No exclamation marks. If a sentence seems to need fancier punctuation, break it into two plain ones.
 
 3. **Cut every AI tell.**
 
@@ -39,7 +39,7 @@ Generic human-sounding prose is where agents stop, and the user can feel the dif
    - Emoji, always.
    - Uniform paragraph lengths. Let one be a single sentence sometimes.
 
-4. **The skeleton rule (the user, 2026-08-16).** The voice must run in the bones, not just the clothes. A paragraph that wears the register but keeps a numbered-list skeleton is a costume: labels like [1], [2], [3], bulleted parallel points, each point standing alone as one block. A real writer of these registers does not write labeled parallel blocks; they write one flowing line of thought. So when writing like a human:
+4. **The skeleton rule (user, 2026-08-16).** The voice must run in the bones, not just the clothes. A paragraph that wears the register but keeps a numbered-list skeleton is a costume: labels like [1], [2], [3], bulleted parallel points, each point standing alone as one block. A real writer of these registers does not write labeled parallel blocks; they write one flowing line of thought. So when writing like a human:
 
    - No [1] [2] [3] labels, no bullet cascades, no numbered parallel points, in any human-voice writing. If the content is genuinely a list, it stays a list only when the user asked for a list; otherwise it becomes prose with the spine of the argument.
    - The structure is the argument: open with the concrete thing or the historical pattern, follow the reason, land on the prediction or the verdict. No section headers in a short conversational piece.

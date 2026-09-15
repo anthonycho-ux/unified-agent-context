@@ -1,7 +1,7 @@
 # Handoff — standardize UAC context, preserve each agent's flavor
 
 Paste-ready brief for a coding agent continuing this work in Orca.
-Repo: `/Users/<mac-user>/unified-agent-context` · public: https://github.com/anthonycho-ux/unified-agent-context
+Repo: the `unified-agent-context` checkout on this machine (public repo URL in README).
 
 ---
 
@@ -27,7 +27,7 @@ Conflict rule (one line): **facts → shared store wins; style → local wins.**
 
 ### Neutral fact shape (what may be written to the store)
 - Prefer declarative world/user claims, not imperative agent instructions.
-  - Good: `the user wants action-first replies (decision/action first, context after).`
+  - Good: `User wants action-first replies (decision/action first, context after).`
   - Bad: `You must always put DECIDE at the top and use ask_user_question.`
 - Keep existing scopes: `global` (preferences) vs `project:<git-root>` (decisions/state).
 - Keep secret gate fail-closed. Never write credentials/tokens.
@@ -109,7 +109,7 @@ Fact (store): `preference: action-first replies`
 
 ## Suggested first agent message (if launching cold)
 
-You are continuing **Unified Agent Context (UAC)** at `/Users/<mac-user>/unified-agent-context`.
+You are continuing **Unified Agent Context (UAC)** in this `unified-agent-context` checkout.
 Read `CLAUDE.md` and `docs/handoff-agent-flavor-adapters.md` first.
 Implement Phase A + Phase B: document the fact-vs-voice split, then make
 `scripts/inject-context.mjs` accept `--agent <id>` with `generic` (current

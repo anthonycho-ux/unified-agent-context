@@ -1,8 +1,8 @@
 # Handoff — session-digest bus (회의록 서랍)
 
 Paste-ready brief for a coding agent continuing this work in Orca.
-Repo: `/Users/<mac-user>/unified-agent-context` · public: https://github.com/anthonycho-ux/unified-agent-context
-Default worker: gjc via `orca terminal create --command /Users/<mac-user>/.local/bin/gjc` (the user's stated prior).
+Repo: the `unified-agent-context` checkout on this machine (public repo URL in README).
+Default worker: gjc via `orca terminal create --command <local-bin>/gjc` (user's stated prior).
 
 ---
 

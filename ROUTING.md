@@ -1,6 +1,6 @@
 # ROUTING.md — implementation-task delegation fallback order (Mac)
 
-Verified 2026-07-16 by Claude Code (direct filesystem + auth-token decode on the user's Mac).
+Verified 2026-07-16 by Claude Code (direct filesystem + auth-token decode on the local Mac).
 Companion shared-store fact: dedupe_key `4814080805b18405` (scope `global`).
 
 ## The one thing that keeps biting the fleet
@@ -38,7 +38,7 @@ Current known state: **Primary Codex weekly cap active, blocked until 2026-07-22
    gjc's `config.yml` role-agents point at a healthy provider (e.g. `claude-opus-4-8`),
    and that store-host's own codex auth is configured (unverified as of 2026-07-16 — no
    `~/.codex/auth.json` in store-host's default home).
-5. **Ask the human (the user).** When 1–4 are unavailable or the task is
+5. **Ask the human.** When 1–4 are unavailable or the task is
    consequential, escalate rather than silently degrade.
 
 ## Read-only / research tasks
@@ -55,6 +55,6 @@ CLI or gjc(healthy-provider) as above.
   may not see `~/.local/bin` or `~/.codex*` paths and can wrongly conclude a worker
   is "missing." Confirm on the real host before rewriting shared facts.
 
-## Visible-lane orchestration (2026-09-04, the user-verified)
+## Visible-lane orchestration (2026-09-04, user-verified)
 
-Multi-step implementation work defaults to herdr coding-agent panes (grok/claude etc.) in a task-named workspace: the user watches work live in his herdr UI, dispatching agent verifies via herdr agent read and integrates. Short lookups and parallel research may stay on aside subagents. Hidden-lane principle: any dark-room subagent expected to run 2+ minutes needs a visible herdr mirror or starts in herdr instead. store-host-side builds: run the command inside a herdr pane over ssh so work stays visible. Evidence 2026-09-04: grok agent cndream-observer spawned by Sol (Aside) in workspace cndream-showcase; the user watched live and confirmed the workflow. Resilience corollary (2026-09-04): herdr panes run on the Mac host shell and keep working when Aside's sandboxed Bash tool is down (spawn ENOENT, socket-copy EINVAL), giving the user live monitoring even during Bash outages.
+Multi-step implementation work defaults to herdr coding-agent panes (grok/claude etc.) in a task-named workspace: the user watches work live in the herdr UI, dispatching agent verifies via herdr agent read and integrates. Short lookups and parallel research may stay on aside subagents. Hidden-lane principle: any dark-room subagent expected to run 2+ minutes needs a visible herdr mirror or starts in herdr instead. store-host-side builds: run the command inside a herdr pane over ssh so work stays visible. Evidence 2026-09-04: grok agent cndream-observer spawned by Sol (Aside) in workspace cndream-showcase; the user watched live and confirmed the workflow. Resilience corollary (2026-09-04): herdr panes run on the Mac host shell and keep working when Aside's sandboxed Bash tool is down (spawn ENOENT, socket-copy EINVAL), giving the user live monitoring even during Bash outages.

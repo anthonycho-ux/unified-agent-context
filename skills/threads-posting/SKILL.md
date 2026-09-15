@@ -7,7 +7,9 @@ description: Publish posts on Threads (threads.com) for the user. Use whenever t
 
 ## Core rule: the user's text IS the post
 
-- **Attached media is part of the post (the user, 2026-08-19: "update your skill to include the media that I attach. they're important for visual communication").** When the user attaches images to a post request, attach them to the post by default. They are proof and visual communication, not decoration. Confirm only the overall post (text + media) in one gate; do not drop the media.
+- **Attached media is part of the post (user, 2026-08-19: "update your skill to include the media that I attach. they're important for visual communication").** When the user attaches images to a post request, attach them to the post by default. They are proof and visual communication, not decoration. Confirm only the overall post (text + media) in one gate; do not drop the media.
+- **Media-verify gate (user, 2026-09-03):** before submitting any post that should carry media, a fresh snapshot must show the attachment UI present (thumbnail, media group, or attach-preview element). Text-only verification is never enough for a media post; a silent attach failure ships an image-less post that looks done.
+- **Permalink rule (user, 2026-09-03):** after any successful post, extract the permalink to the published post and hand it to the user in the same reply so they can verify directly. A post reported without its link is incomplete.
 - When the user supplies their own text, treat it as final copy. Apply a light pass only: fix dictation artifacts, doubled words, and obvious typos. Never rewrite sentences, reorder ideas, add polish, or smooth the voice. AI-flavored rewriting is the failure mode.
 - Keep every name, alias, and code-switch (English/Korean mixing, tool names, quoted phrases) exactly as written. If the user publicly refers to the agent by an alias different from its private name, keep the alias verbatim and never surface the private name publicly.
 - No emojis, no hashtags, no engagement bait, no calls to action unless the user wrote them.
@@ -64,12 +66,12 @@ Trigger: the user asks to analyze Buffer insights, wants engagement growth, or a
 - Delivery: keep the brief in the session chat unless the user has asked for Telegram push; a push goes through the Hermes Telegram path (hermes send --to telegram on store-host), never a new Aside routine.
 - Do not publish anything from this analysis without the user's explicit go. This is analysis and recommendation, not auto-posting.
 
-### Tribe-building lens (the user, 2026-08-19)
+### Tribe-building lens (user, 2026-08-19)
 
-- the user's stated intent for social media is to build his own tribe in the Seth Godin sense (Tribe, the book): a community of people who share his values and identity, not a follower count or audience. Recorded to UAC as dedupe 63a1d8c0165c85f5 so Hermes and other agents share it.
+- The user's stated intent for social media is to build their own tribe in the Seth Godin sense (Tribe, the book): a community of people who share their values and identity, not a follower count or audience. Recorded to UAC as dedupe 63a1d8c0165c85f5 so Hermes and other agents share it.
 - Evaluate every analysis output and content move against the question: does this build the tribe (shared values, belonging, identity) or just chase vanity metrics? The winning content shapes are means; tribe-building is the end.
 
-## Content lens: meta observer industry-acquisition pattern (the user, 2026-08-19)
+## Content lens: meta observer industry-acquisition pattern (user, 2026-08-19)
 
 A standing content lens for ideation, separate from the tribe-building lens above. Use it whenever drafting or suggesting Threads content about AI's effect on industries, not only when the user explicitly names it.
 
@@ -90,7 +92,7 @@ A standing content lens for ideation, separate from the tribe-building lens abov
 - Prefer a final thread segment titled like `출처` / `Sources` with full URLs (CDC, EPA, papers, etc.).
 - Do not invent sources. Only cite URLs actually used.
 - Skip the sources segment only for pure opinion, diary, or when the user explicitly wants no links.
-- **Inline citation format: `(출처: url)` right after the claim (the user, 2026-08-23).** When the user wants each source clickable beside its claim rather than a trailing sources segment, wrap the URL as `(출처: <url>)` immediately after the supported sentence. The parenthetical is an explicit user override of the commas-and-periods-only punctuation rule. X auto-renders these URLs as link preview cards, which is accepted and even useful as visible proof.
+- **Inline citation format: `(출처: url)` right after the claim (user, 2026-08-23).** When the user wants each source clickable beside its claim rather than a trailing sources segment, wrap the URL as `(출처: <url>)` immediately after the supported sentence. The parenthetical is an explicit user override of the commas-and-periods-only punctuation rule. X auto-renders these URLs as link preview cards, which is accepted and even useful as visible proof.
 
 ## Character limits and threading
 
@@ -103,6 +105,9 @@ A standing content lens for ideation, separate from the tribe-building lens abov
 
 
 Use Buffer GraphQL as the default way to publish. Browser automation on threads.com is the fallback.
+
+- **Pre-send duplicate check (2026-09-09):** before shareNow on any channel the user may also post to manually, reload the live destination profile and scan the last few minutes for a same-story post. A confirmation window is not dead time; the user can publish his own version while the draft sits in approval. The manual post wins, cancel the API send. Proven the hard way: manual post 00:44 plus API thread 00:45 put the same story on the profile twice.
+- **Published posts cannot be deleted through the Buffer API (2026-09-09):** deletePost on a sent post returns Account is not allowed to perform this action on post. Delete published Threads content in the Threads web UI instead: post menu → Delete, and deleting the root item hides connected thread items with it.
 
 ### Credentials and channel (look up live; do not hardcode secrets)
 
@@ -236,7 +241,7 @@ Use only when Buffer is unavailable, the channel is disconnected, the media path
 - Each generated image exposes Use as reference (iterate from it), Download, and Add to favorites. Download saves as `.webp`. If the Threads composer or Buffer asset upload rejects webp, convert first: `sips -s format png in.webp --out out.png`.
 - The Media tab holds the full Creations gallery plus curated preset prompts (isometric diorama, clean product shot, photo restoration, trending hairstyles, etc.) for common image treatments, useful when a quick styled shot is wanted without writing a full prompt.
 - The Artifacts tab produces structured non-image content (guides, plans) more like a mini document than a chat reply. Only use it for a companion piece, never for post copy itself.
-- The Scheduled tab (e.g. a standing daily headline briefing prompt) can source topic ideas for curation, but it is Meta's own internal reminder system with no delivery to the user's phone or the fleet. For anything that must reliably reach him, use Hermes cron on store-host per the standing scheduling rule, not meta.ai Scheduled.
+- The Scheduled tab (e.g. a standing daily headline briefing prompt) can source topic ideas for curation, but it is Meta's own internal reminder system with no delivery to the user's phone or the fleet. For anything that must reliably reach the user, use Hermes cron on store-host per the standing scheduling rule, not meta.ai Scheduled.
 - The public `@meta.ai` mention inside a Threads post or reply (tag it for a live AI-authored public reply, like Grok on X) is a Meta beta feature confirmed live only in Malaysia, Saudi Arabia, Mexico, Argentina, and Singapore as of mid-2026. Do not assume it works for this Calgary-based account; verify with a low-stakes test post before relying on it for real curation, and do not block a content plan on it.
 - Hard rule: never publish Meta AI's own generated caption or reply text as post copy. It writes in its own assistant voice, not the user's plain 평서체 register. Use meta.ai strictly for image generation and idea sourcing, never for drafting the words that get published.
 

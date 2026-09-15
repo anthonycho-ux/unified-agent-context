@@ -1,6 +1,6 @@
 # Phase 7 ADR: Chat-Session → UAC Ingestion
 
-Status: FROZEN 2026-07-12 (Fable architecture-freeze consult via Aside/Sol; the user resolved open questions same day)
+Status: FROZEN 2026-07-12 (Fable architecture-freeze consult via Aside/Sol; open questions resolved same day)
 
 ## 1. Decision summary
 
@@ -16,9 +16,9 @@ Status: FROZEN 2026-07-12 (Fable architecture-freeze consult via Aside/Sol; the 
 | 4 | Dedup/conflict | LLM-as-normalizer at source (canonical statement: English, declarative, present-tense, no session-local dates) + existing exact-hash upsert. Residual near-dupes/contradictions → Noticer curator merge authority. Embedding similarity deferred to v2. No dedupe_key change. |
 | 5 | Flood control | Forward-only for transcripts; full backfill ONLY of existing Aside episodic pages. Caps: ≤10 facts/source/sweep, ≤25 facts/sweep total. Extraction restricted to decision/preference/durable-env facts with confidence field; below-threshold dropped, not queued. |
 | 6 | Privacy | Raw transcripts never leave their host. Distillation runs where data lives. Only post-secret-gate distilled facts travel the existing outbox→store-host lane. Auto-distill fail-safe (skip); explicit writes fail-closed. |
-| 7 | Budget (the user, 2026-07-12) | No hard monthly cap needed — codex runs on subscription auth, not metered API. Per-sweep fact caps bound volume. |
-| 8 | Server-side gap (the user, 2026-07-12) | Quarterly manual data-export ritual COMMITTED (claude.ai/Claude Desktop zip + grok export) feeding `ingest-inbox/`; Stage 4 builds the parser lane. |
-| 9 | Retention on entry (the user delegated to empirical test, 2026-07-12) | Stages 1-2 ingest as days90-pending (`project_state`-class retention for ingested facts pending curator promotion). Metrics hook records curator discard/merge rate. Flip condition: after ~50 ingested facts or 2 weeks, discard rate <20% → switch to permanent-on-entry; ≥20% → keep pending, tighten extraction prompt. |
+| 7 | Budget (user, 2026-07-12) | No hard monthly cap needed — codex runs on subscription auth, not metered API. Per-sweep fact caps bound volume. |
+| 8 | Server-side gap (user, 2026-07-12) | Quarterly manual data-export ritual COMMITTED (claude.ai/Claude Desktop zip + grok export) feeding `ingest-inbox/`; Stage 4 builds the parser lane. |
+| 9 | Retention on entry (user delegated to empirical test, 2026-07-12) | Stages 1-2 ingest as days90-pending (`project_state`-class retention for ingested facts pending curator promotion). Metrics hook records curator discard/merge rate. Flip condition: after ~50 ingested facts or 2 weeks, discard rate <20% → switch to permanent-on-entry; ≥20% → keep pending, tighten extraction prompt. |
 
 ## 3. Source verdicts
 
@@ -49,7 +49,7 @@ Status: FROZEN 2026-07-12 (Fable architecture-freeze consult via Aside/Sol; the 
 
 | Stage | Deliverable | Acceptance test |
 |---|---|---|
-| 1 | `scripts/ingest-aside.mjs` + launchd plist (the user loads): cursor file, cheap gate, codex-headless extraction, caps, days90-pending retention, heartbeat fact per successful sweep, discard-rate metrics hook. Backfill existing episodic pages. | Run against one episodic page → 1-10 normalized facts w/ correct source_ref; immediate re-run stores 0 (idempotent); fake `sk-` token in page → skip-not-crash; facts on store-host after next hourly sync. |
+| 1 | `scripts/ingest-aside.mjs` + launchd plist (user loads): cursor file, cheap gate, codex-headless extraction, caps, days90-pending retention, heartbeat fact per successful sweep, discard-rate metrics hook. Backfill existing episodic pages. | Run against one episodic page → 1-10 normalized facts w/ correct source_ref; immediate re-run stores 0 (idempotent); fake `sk-` token in page → skip-not-crash; facts on store-host after next hourly sync. |
 | 2 | Source-adapter generalization; Codex transcript adapter; Claude Code digest hook | New Codex session → facts within 24h; 13-file backfill completes across ≤3 sweeps within caps; Stop hook exits 0 with store-host down (spool). |
 | 3 | store-host-side Hermes lane (cron + vendored schema/gate module) | Hermes memory item → fact in canonical store w/ correct ref; visible on Mac within an hour. |
 | 4 | `ingest-inbox/` export-zip parser (claude.ai + grok formats); retention flip decision per §2.9 metrics | Dropped export zip → capped facts; discard-rate report generated; retention decision executed. |
