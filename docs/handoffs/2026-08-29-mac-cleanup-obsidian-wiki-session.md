@@ -16,14 +16,14 @@
 
 **Obsidian vault:**
 - Migrated from iCloud sync to Dropbox CloudStorage:
-  `/Users/<mac-user>/Library/CloudStorage/Dropbox/Obsidian/partnership-journal`
+  `<vault-root>` (private Obsidian vault, Dropbox-backed)
   (never write to the old iCloud path)
 - Karpathy LLM Wiki plugin (`karpathywiki`, already installed, previously stalled since Aug 3)
-  is now configured and verified working: routes through the user's own CC-PROXY
+  is now configured and verified working: routes through the local CC-PROXY
   (`sov-ts (local inference endpoint)`, model `z-ai/glm-5.3`), `llm_config_status: ok`
   confirmed by direct file read, not just the plugin's own claim.
 - `Inbox unclassified` (a separate small vault, 1 real note) merged into
-  `sources/Inbox unclassified/` inside partnership-journal; `watchedFolders` points there.
+  `sources/Inbox unclassified/` inside the vault; `watchedFolders` points there.
 
 ## Open items — the actual todo list material
 
@@ -37,7 +37,7 @@
    - Domain-first namespacing (`wiki/<domain>/...`) — the "flat namespace hurts link
      quality" justification did NOT hold up under fact-check (no real comparative study
      found; PKM community actually leans toward flat+links). Still may be right for
-     the user's specific case, but decide on its own merits, not that claim.
+     this vault's specific case, but decide on its own merits, not that claim.
    - Typed-edge graph instead of entity/concept split — stands on its own reasoning.
    - Event/decision-first ingest (merge with UAC's `record-fact` instead of a parallel
      knowledge store) — stands on its own reasoning, addresses a real risk (two knowledge
@@ -58,7 +58,7 @@
 
 ## Architecture decision worth remembering
 
-the user's own framing, recorded to UAC (`4b967a71f10bcc2f`, global): Obsidian is one of
+The user's own framing, recorded to UAC (`4b967a71f10bcc2f`, global): Obsidian is one of
 several possible *viewers* for his knowledge, not the source of truth or the automation
 layer. He runs an agent (cmd/Claude Code) alongside his vault every session, so UI-gated,
 click-to-activate plugin designs (built for agentless human users) impose friction without

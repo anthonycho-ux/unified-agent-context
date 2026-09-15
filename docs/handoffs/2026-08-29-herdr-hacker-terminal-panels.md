@@ -1,12 +1,12 @@
 # Handoff: Herdr hacker-terminal panel wall
 
 **Date:** 2026-08-29
-**From:** Claude Code (Sonnet 5), session in `/Users/<mac-user>/unified-agent-context`
+**From:** Claude Code (Sonnet 5), session in the `unified-agent-context` checkout
 **To:** Aside CLI, commandcode CLI (or any agent asked to touch this layout next)
 
 ## What exists right now
 
-the user asked for a sci-fi hacker-terminal look. I split the Herdr workspace/tab
+The user asked for a sci-fi hacker-terminal look. I split the Herdr workspace/tab
 around this Claude Code session's own pane into a 5-column x 2-row grid (10 panes)
 and launched a different looping visual effect in each. This session's own pane
 (`w3:p1R`) was deliberately left alone — do not pipe effects into it, it's a live
@@ -34,7 +34,7 @@ IDs can shift if panes close).
 Scripts live at:
 
 ```
-/private/tmp/claude-501/-Users-<mac-user>-unified-agent-context/c83b9a28-643e-4aad-9c12-8ca50af13b1e/scratchpad/panels/
+/private/tmp/claude-501/<session-slug>/<session-id>/scratchpad/panels/
 ```
 
 Files in that directory: `matrix.py`, `hexdump.py`, `scan.py`, `binary.py`, `log.py`,

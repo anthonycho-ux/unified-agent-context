@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# sov의 최신 주간 fitness 보고서를 맥의 partnership-journal vault로 배달한다.
+# sov의 최신 주간 fitness 보고서를 맥의 Obsidian vault로 배달한다.
 # sov(순찰자)가 쓴 보고서를 맥(배달부)이 가져와 vault(책상)에 노트로 올려놓는다.
 # 멱등: 같은 날짜의 노트가 이미 있으면 아무것도 하지 않는다.
 # launchd가 매주 월요일 실행 (맥이 자고 있었다면 깨어날 때 1회 따라잡기).
 set -uo pipefail
 
-VAULT="/Users/<mac-user>/Library/Mobile Documents/iCloud~md~obsidian/Documents/partnership-journal"
+# Vault root: set VAULT_ROOT to your vault path before running (no personal paths in repo).
+VAULT="${VAULT_ROOT:?set VAULT_ROOT to your Obsidian vault path}"
 DEST="$VAULT/entries/UAC/fitness"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT

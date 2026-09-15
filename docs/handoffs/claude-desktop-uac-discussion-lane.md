@@ -17,7 +17,7 @@ Hermes verified UAC at the repository checkout (path is machine-local).
 
 The recorded project fact says.
 
-`the user wants Telegram, Discord, Desktop, Hermes, GJC, Codex, and other agents to use UAC as the shared context layer for cross-agent discussion rather than isolated session search.`
+`The user wants Telegram, Discord, Desktop, Hermes, GJC, Codex, and other agents to use UAC as the shared context layer for cross-agent discussion rather than isolated session search.`
 
 ## Design constraint
 
@@ -44,11 +44,11 @@ Answer these questions.
 
 ## Quality gate
 
-The result must be understandable to the user as a simple operating model, not only as config.
+The result must be understandable as a simple operating model, not only as config.
 
 Use this acceptance test.
 
-`the user gives one topic to Hermes. Claude Desktop sees the same topic through UAC. Claude Desktop writes a response. Hermes sees Claude Desktop's response through UAC. the user gets one synthesis.`
+`The user gives one topic to Hermes. Claude Desktop sees the same topic through UAC. Claude Desktop writes a response. Hermes sees Claude Desktop's response through UAC. The user gets one synthesis.`
 
 ## Safety
 

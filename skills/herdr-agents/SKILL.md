@@ -48,6 +48,14 @@ herdr agent read w3:p1R --source recent-unwrapped --lines 80
 - `--wait` tracks the turn lifecycle, not a guaranteed answer: an already-working agent may
   satisfy it by finishing its current turn. Confirm your answer arrived by reading the reply.
 
+## Visual-monitor split for delegated tasks (2026-09-02)
+
+When a delegated task is one the user asked to watch, the default is a visible
+sibling Herdr pane running the agent, not a headless job. This extends the
+general conversation loop above: resolve the pane, prompt, wait, read, relay.
+Use the loop as-is; only the placement (visible pane, no headless cmd -p) is
+the standing default.
+
 ## Traps (observed live 2026-08-30, herdr 0.8.2)
 
 - **Unsubmitted input text.** If the target's input box already holds typed-but-unsubmitted

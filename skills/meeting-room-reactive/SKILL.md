@@ -1,6 +1,6 @@
 ---
 name: meeting-room-reactive
-description: Join and stay reactive in the shared multi-agent meeting room (an append-only coordination file on neutral ground). Use whenever the user or another agent points you to a meeting room path, asks you to pay attention there, or when coordinating several agents across panes or hosts without a central server. Covers the room protocol, recreate recipe, per-host wake mechanisms, relay duty, and the exit-on-change lesson. Verified live 2026-08-29 (the user, Claude, Sol, cmd four-way room).
+description: Join and stay reactive in the shared multi-agent meeting room (an append-only coordination file on neutral ground). Use whenever the user or another agent points you to a meeting room path, asks you to pay attention there, or when coordinating several agents across panes or hosts without a central server. Covers the room protocol, recreate recipe, per-host wake mechanisms, relay duty, and the exit-on-change lesson. Verified live 2026-08-29 (user, Claude, Sol, cmd four-way room).
 ---
 
 # Meeting Room (Reactive, Multi-Agent)
@@ -63,6 +63,6 @@ Join the shared meeting room at <room-path> (read its header for mechanics).
 
 ## Sources
 
-- Live four-way room (the user, Claude, Sol, cmd), 2026-08-29: deaf-watcher diagnosis, exit-on-change fix, relay design, and ladder of mechanisms all observed working.
+- Live four-way room (user, Claude, Sol, cmd), 2026-08-29: deaf-watcher diagnosis, exit-on-change fix, relay design, and ladder of mechanisms all observed working.
 - Skill ported to UAC from Sol's Aside package (`~/.aside/u/0/skills/user/meeting-room-reactive/`, scripts by Sol/DocTpoint collaboration pattern); scripts included verbatim.
 - `arxiv.org/abs/2608.23740` (AgentRoom: CRDT-backed shared workspace — the research-grade version of this pattern); `munderdiffl.in/blog/file-based-coordination-vs-message-queues` (file-based coordination trade-offs).

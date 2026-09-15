@@ -67,7 +67,7 @@ node "$UAC_HOME/scripts/record-fact.mjs" \
 
 **Write like a fact, not an order.**
 
-- Good: `the user wants action-first replies (decision first, context after).`
+- Good: `User wants action-first replies (decision first, context after).`
 - Bad: `You must always put DECIDE at the top of every message.`
 
 The second form steals every agent's flavor. The first form lets each agent
@@ -132,7 +132,7 @@ node "$UAC_HOME/scripts/inject-context.mjs" | grep -F "$MARKER" && echo OK
 
 Example fact in the store:
 
-> `preference: the user wants action-first replies.`
+> `preference: User wants action-first replies.`
 
 | Agent | What inject roughly becomes |
 |-------|-----------------------------|
