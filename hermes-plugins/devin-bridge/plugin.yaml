@@ -1,0 +1,16 @@
+name: devin-bridge
+version: 0.1.0
+description: Chat with a local Devin CLI agent from any Hermes surface (CLI, Telegram, Discord, ...)
+author: unified-agent-context
+provides_tools:
+  - devin_ask
+  - devin_status
+  - devin_reset
+provides_hooks:
+  - pre_llm_call
+config:
+  workspace: ~/devin-chat
+  devin_bin: devin
+  permission_mode: normal
+  model: ""
+  timeout: 900
