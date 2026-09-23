@@ -13,7 +13,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 mkdir -p "$DEST"
 
-LATEST=$(ssh -o ConnectTimeout=10 store-host 'ls -t /home/user/.uac/maintenance/reports/*-fitness.md 2>/dev/null | head -1')
+LATEST=$(ssh -o ConnectTimeout=10 store-host 'ls -t ~/.uac/maintenance/reports/*-fitness.md 2>/dev/null | head -1')
 if [ -z "${LATEST:-}" ]; then
   echo "no fitness reports on store-host"
   exit 0
@@ -27,13 +27,13 @@ if [ -f "$NOTE" ]; then
   echo "already synced: $NOTE"
 else
 scp -q -o ConnectTimeout=10 "store-host:$LATEST" "$TMP/fitness.md" || { echo "scp fitness failed"; exit 1; }
-scp -q -o ConnectTimeout=10 "store-host:/home/user/.uac/maintenance/reports/$DATE-cleanup.md" "$TMP/cleanup.md" 2>/dev/null || true
+scp -q -o ConnectTimeout=10 "store-host:~/.uac/maintenance/reports/$DATE-cleanup.md" "$TMP/cleanup.md" 2>/dev/null || true
 
 {
   echo "# UAC 주간 fitness — $DATE"
   echo
   echo "- 출처: store-host 자동 점검 (매주 월요일 07:23, cron)"
-  echo "- 원본: \`/home/user/.uac/maintenance/reports/$BASE\` (store-host)"
+  echo "- 원본: \`~/.uac/maintenance/reports/$BASE\` (store-host)"
   echo "- 동기화: $(date '+%Y-%m-%d %H:%M') (맥 launchd)"
   echo
   echo '## 원본 보고서'

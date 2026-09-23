@@ -23,7 +23,7 @@ if [ "$IS_FIRST" != "1" ]; then
 fi
 
 BLOCK=$(node "$REPO_ROOT/scripts/inject-context.mjs" 2>/dev/null || true)
-REG_BLOCK=$(bash "${HERMES_HOME:-${HOME:-/home/user}/.hermes}/scripts/agent-registry-inject.sh" 2>/dev/null || true)
+REG_BLOCK=$(bash "${HERMES_HOME:-$HOME/.hermes}/scripts/agent-registry-inject.sh" 2>/dev/null || true)
 
 if [ -n "$BLOCK" ] || [ -n "$REG_BLOCK" ]; then
   if [ -n "$BLOCK" ] && [ -n "$REG_BLOCK" ]; then

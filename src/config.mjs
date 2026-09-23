@@ -48,9 +48,17 @@ export function resolveProjectId(cwd = process.cwd()) {
  *    - host가 원격이면 ssh 너머 stdio-MCP 스폰 (Tailscale ssh 키 재사용, 신규 인증 없음)
  * 4. 아무것도 없으면 레거시 로컬 스폰
  */
+// Native addons (better-sqlite3) are ABI-locked to the Node that built them.
+// Agents may run different Node versions, so the store must spawn under one
+// canonical binary: UAC_NODE override → mise shim → the calling process.
+const CANONICAL_NODE = process.env.UAC_NODE
+  ?? (fs.existsSync(`${os.homedir()}/.local/share/mise/shims/node`)
+      ? `${os.homedir()}/.local/share/mise/shims/node`
+      : process.execPath);
+
 function resolveServerSpec() {
   const localEntry = process.env.UAC_SERVER_ENTRY ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
-  const localSpec = { command: 'node', args: [localEntry], env: { DATA_DIR } };
+  const localSpec = { command: CANONICAL_NODE, args: [localEntry], env: { DATA_DIR } };
 
   if (process.env.UAC_SERVER_ENTRY || process.env.UAC_DATA_DIR || process.env.UAC_REMOTE === '0') {
     return [localSpec];
@@ -68,7 +76,7 @@ function resolveServerSpec() {
     return [localSpec];
   }
 
-  const localStoreSpec = { command: 'node', args: [store.entry], env: { DATA_DIR: expandHome(store.dataDir) } };
+  const localStoreSpec = { command: CANONICAL_NODE, args: [store.entry], env: { DATA_DIR: expandHome(store.dataDir) } };
 
   // 명시 오버라이드: UAC_STORE_HOST가 있으면 그 호스트만 사용 (폴백 없음).
   const overrideHost = process.env.UAC_STORE_HOST;
@@ -105,7 +113,7 @@ export function localSpec({ dataDir = process.env.UAC_LOCAL_DATA_DIR ?? DATA_DIR
   const localEntry = process.env.UAC_SERVER_ENTRY ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
 
   return {
-    command: 'node',
+    command: CANONICAL_NODE,
     args: [localEntry],
     env: { DATA_DIR: dataDir },
   };

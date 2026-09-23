@@ -20,7 +20,10 @@ const { makeFact } = await import(pathToFileURL(path.join(srcDir, 'schema.mjs'))
 const { getInjectionBlock, InjectorDegradedError } = await import(pathToFileURL(path.join(srcDir, 'injector.mjs')).href);
 
 function assertNodeSpec(spec) {
-  if (spec.command !== 'node') throw new Error(`refusing non-node spec in test: ${spec.command}`);
+  if (spec.command !== 'node' && spec.command !== process.execPath
+      && path.basename(spec.command) !== 'node') {
+    throw new Error(`refusing non-node spec in test: ${spec.command}`);
+  }
   return spec;
 }
 

@@ -20,7 +20,8 @@ const { reconcile, normalizeRawRow } = await import(pathToFileURL(path.join(scri
 
 // Hard no-SSH guard: every store this suite spawns MUST be a local `node` server.
 function assertNodeSpec(spec) {
-  if (spec.command !== 'node') {
+  if (spec.command !== 'node' && spec.command !== process.execPath
+      && path.basename(spec.command) !== 'node') {
     throw new Error(`refusing non-node spec in test: ${spec.command}`);
   }
   return spec;

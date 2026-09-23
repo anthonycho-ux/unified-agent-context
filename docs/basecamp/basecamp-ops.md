@@ -14,7 +14,7 @@ TL;DR: Basecamp 5 (2026) is agent-ready: official CLI, SDK, MCP server, and agen
 
 ## CLI (official, installed on store-host)
 
-- Binary: `/home/user/bin/basecamp`, version **0.9.1** (install one-liner: `curl -fsSL https://basecamp.com/install-cli | bash`; brew: `brew install --cask basecamp/tap/basecamp-cli`)
+- Binary: `~/bin/basecamp`, version **0.9.1** (install one-liner: `curl -fsSL https://basecamp.com/install-cli | bash`; brew: `brew install --cask basecamp/tap/basecamp-cli`)
 - Agent-facing: JSON output with breadcrumbs, `--help --agent` structured discovery on every command, `basecamp commands --json` full catalog
 - MCP server: `basecamp mcp` runs on stdin/stdout — 15 domain tools (projects, todos, cards, messages, campfires, boosts, schedules, files, people, automation, reports, everything, clientside, forwards, account)
 - Profiles: `basecamp profile set-default <name>` or `BASECAMP_PROFILE=<name>`
