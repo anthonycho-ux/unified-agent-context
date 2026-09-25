@@ -26,3 +26,10 @@ artifacts/tableau-votd/
 
 .commandcode/
 store-go/uac-store
+
+# secrets — never commit real env files
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
