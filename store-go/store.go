@@ -29,6 +29,9 @@ type Store struct {
 }
 
 func Open(dataDir string) (*Store, error) {
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+		return nil, err
+	}
 	dbPath := filepath.Join(dataDir, "context.db")
 	dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(1)", dbPath)
 	db, err := sql.Open("sqlite", dsn)
@@ -39,8 +42,156 @@ func Open(dataDir string) (*Store, error) {
 		db.Close()
 		return nil, err
 	}
+	if _, err := db.Exec(schemaDDL); err != nil {
+		db.Close()
+		return nil, err
+	}
 	return &Store{db: db, now: time.Now}, nil
 }
+
+// Tables/triggers used by the four implemented tools, matching
+// mcp-memory-keeper's DDL verbatim so fresh databases behave identically.
+const schemaDDL = `
+CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        description TEXT,
+        branch TEXT,
+        working_directory TEXT,
+        parent_id TEXT,
+        default_channel TEXT DEFAULT 'general',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (parent_id) REFERENCES sessions(id)
+      );
+CREATE TRIGGER IF NOT EXISTS update_sessions_timestamp
+      AFTER UPDATE ON sessions
+      BEGIN
+        UPDATE sessions SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+      END;
+CREATE TABLE IF NOT EXISTS context_items (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        category TEXT,
+        priority TEXT DEFAULT 'normal',
+        metadata TEXT,
+        size INTEGER DEFAULT 0,
+        is_private INTEGER DEFAULT 0,
+        channel TEXT DEFAULT 'general',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        sequence_number INTEGER DEFAULT 0,
+        FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+        UNIQUE(session_id, key)
+      );
+CREATE INDEX IF NOT EXISTS idx_context_items_session ON context_items(session_id);
+CREATE INDEX IF NOT EXISTS idx_context_items_category ON context_items(category);
+CREATE INDEX IF NOT EXISTS idx_context_items_priority ON context_items(priority);
+CREATE INDEX IF NOT EXISTS idx_context_items_private ON context_items(is_private);
+CREATE INDEX IF NOT EXISTS idx_context_items_channel ON context_items(channel);
+CREATE INDEX IF NOT EXISTS idx_context_items_created ON context_items(created_at);
+CREATE INDEX IF NOT EXISTS idx_context_items_session_created ON context_items(session_id, created_at);
+CREATE TABLE IF NOT EXISTS context_changes (
+              sequence_id INTEGER PRIMARY KEY AUTOINCREMENT,
+              session_id TEXT NOT NULL,
+              item_id TEXT NOT NULL,
+              key TEXT NOT NULL,
+              operation TEXT NOT NULL CHECK (operation IN ('CREATE', 'UPDATE', 'DELETE')),
+              old_value TEXT,
+              new_value TEXT,
+              old_metadata TEXT,
+              new_metadata TEXT,
+              category TEXT,
+              priority TEXT,
+              channel TEXT,
+              size_delta INTEGER DEFAULT 0,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              created_by TEXT,
+              FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+            );
+CREATE TRIGGER IF NOT EXISTS track_context_insert
+            AFTER INSERT ON context_items
+            BEGIN
+              INSERT INTO context_changes (
+                session_id, item_id, key, operation,
+                new_value, new_metadata, category, priority, channel,
+                size_delta, created_by
+              ) VALUES (
+                NEW.session_id, NEW.id, NEW.key, 'CREATE',
+                NEW.value, NEW.metadata, NEW.category, NEW.priority, NEW.channel,
+                NEW.size, 'context_save'
+              );
+            END;
+CREATE TRIGGER IF NOT EXISTS track_context_update
+            AFTER UPDATE ON context_items
+            WHEN OLD.value != NEW.value OR
+                 IFNULL(OLD.metadata, '') != IFNULL(NEW.metadata, '') OR
+                 IFNULL(OLD.category, '') != IFNULL(NEW.category, '') OR
+                 IFNULL(OLD.priority, '') != IFNULL(NEW.priority, '') OR
+                 IFNULL(OLD.channel, '') != IFNULL(NEW.channel, '')
+            BEGIN
+              INSERT INTO context_changes (
+                session_id, item_id, key, operation,
+                old_value, new_value, old_metadata, new_metadata,
+                category, priority, channel, size_delta, created_by
+              ) VALUES (
+                NEW.session_id, NEW.id, NEW.key, 'UPDATE',
+                OLD.value, NEW.value, OLD.metadata, NEW.metadata,
+                NEW.category, NEW.priority, NEW.channel,
+                NEW.size - OLD.size, 'context_save'
+              );
+            END;
+CREATE TRIGGER IF NOT EXISTS track_context_delete
+            AFTER DELETE ON context_items
+            BEGIN
+              INSERT INTO context_changes (
+                session_id, item_id, key, operation,
+                old_value, old_metadata, category, priority, channel,
+                size_delta, created_by
+              ) VALUES (
+                OLD.session_id, OLD.id, OLD.key, 'DELETE',
+                OLD.value, OLD.metadata, OLD.category, OLD.priority, OLD.channel,
+                -OLD.size, 'context_delete'
+              );
+            END;
+CREATE TRIGGER IF NOT EXISTS increment_sequence_insert
+              AFTER INSERT ON context_items
+              FOR EACH ROW
+              WHEN NEW.sequence_number = 0
+              BEGIN
+                UPDATE context_items
+                SET sequence_number = (
+                  SELECT COALESCE(MAX(sequence_number), 0) + 1
+                  FROM context_items
+                  WHERE session_id = NEW.session_id
+                )
+                WHERE id = NEW.id;
+              END;
+CREATE TRIGGER IF NOT EXISTS increment_sequence_update
+              AFTER UPDATE OF value, metadata, category, priority, channel ON context_items
+              FOR EACH ROW
+              WHEN OLD.value != NEW.value OR
+                   IFNULL(OLD.metadata, '') != IFNULL(NEW.metadata, '') OR
+                   IFNULL(OLD.category, '') != IFNULL(NEW.category, '') OR
+                   IFNULL(OLD.priority, '') != IFNULL(NEW.priority, '') OR
+                   IFNULL(OLD.channel, '') != IFNULL(NEW.channel, '')
+              BEGIN
+                UPDATE context_items
+                SET sequence_number = (
+                  SELECT COALESCE(MAX(sequence_number), 0) + 1
+                  FROM context_items
+                  WHERE session_id = NEW.session_id
+                )
+                WHERE id = NEW.id;
+              END;
+CREATE TRIGGER IF NOT EXISTS update_context_items_timestamp
+      AFTER UPDATE ON context_items
+      BEGIN
+        UPDATE context_items SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+      END;
+`
 
 func (s *Store) Close() error { return s.db.Close() }
 
