@@ -1,7 +1,9 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
-import { SERVER_SPEC, SERVER_SPECS } from './config.mjs';
+import { DATA_DIR, SERVER_SPEC, SERVER_SPECS } from './config.mjs';
 import { validateFact } from './schema.mjs';
 import { assertSafe, scanSecrets } from './secret-gate.mjs';
 import { queueForLibrarian } from './librarian.mjs';
@@ -27,6 +29,53 @@ function normalizeScope(scope) {
 
 function firstText(result) {
   return result?.content?.find((part) => part?.type === 'text')?.text ?? '';
+}
+
+const execFileAsync = promisify(execFile);
+
+// 바이너리 스펙(uac-store 등)용 전송: MCP 핸드셰이크 없이 `call` 한 번으로
+// tool을 실행한다. 프로세스는 호출마다 spawn/exit — 누적되는 서버 프로세스도 없다.
+// SDK import 비용(~160ms)과 서버 부팅(~250ms)을 둘 다 건너뛴다.
+class CliBackend {
+  constructor(spec) {
+    this.spec = spec;
+  }
+  async call(tool, args) {
+    const { stdout } = await execFileAsync(
+      this.spec.command,
+      ['call', tool, JSON.stringify(args ?? {})],
+      {
+        env: { ...process.env, ...this.spec.env },
+        maxBuffer: 64 * 1024 * 1024,
+        timeout: 30000,
+      },
+    );
+    // MCP text 결과와 동일한 형태로 감싼다 — 어댑터는 텍스트만 본다.
+    return { content: [{ type: 'text', text: stdout.replace(/\n$/, '') }] };
+  }
+  async close() {}
+}
+
+// 서버 프로세스의 stderr를 <dataDir>/../logs/store-stderr.log에 남긴다.
+// 'ignore'로 버리면 Connection closed의 원인이 영구히 사라진다 (간헐 실패 추적용).
+function attachStderrLog(transport, spec) {
+  const stream = transport.stderr;
+  if (!stream) return;
+
+  const dataDir = spec?.env?.DATA_DIR ?? DATA_DIR;
+  const logPath = path.join(path.dirname(dataDir), 'logs', 'store-stderr.log');
+  try {
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  } catch {
+    return;
+  }
+  stream.on('data', (chunk) => {
+    try {
+      fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${chunk}`);
+    } catch {
+      // 로그 실패가 스토어 연결을 깨지 않게 한다.
+    }
+  });
 }
 
 function parseItems(result) {
@@ -141,9 +190,10 @@ export function prunable(fact, now = new Date()) {
 }
 
 export class ContextStore {
-  constructor(client, transport) {
+  constructor(client, transport, backend) {
     this.client = client;
     this.transport = transport;
+    this.backend = backend ?? null;
   }
 
   static async connect(serverSpec) {
@@ -152,6 +202,26 @@ export class ContextStore {
     const specs = serverSpec ? [serverSpec] : (SERVER_SPECS?.length ? SERVER_SPECS : [SERVER_SPEC]);
     let lastError;
     for (const spec of specs) {
+      if (spec.binary) {
+        // 바이너리 백엔드: spawn-per-call CLI 모드. session_start도 call로 간다 —
+        // 각 호출이 새 프로세스여도 세션은 DB의 latest 행으로 이어진다.
+        const backend = new CliBackend(spec);
+        try {
+          const sessionName = process.env.UAC_SESSION_NAME;
+          if (sessionName) {
+            await backend.call('context_session_start', {
+              name: sessionName,
+              description: 'UAC 하네스 세션 (UAC_SESSION_NAME)',
+            });
+          }
+          return new ContextStore(null, backend, backend);
+        } catch (error) {
+          lastError = error;
+          continue;
+        }
+      }
+      const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+      const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
       const client = new Client(
         { name: 'unified-agent-context', version: '0.1.0' },
         { capabilities: {} },
@@ -159,8 +229,9 @@ export class ContextStore {
       const transport = new StdioClientTransport({
         ...spec,
         env: { ...process.env, ...spec.env },
-        stderr: 'ignore',
+        stderr: 'pipe',
       });
+      attachStderrLog(transport, spec);
       try {
         await client.connect(transport);
         // 하네스 출처 추적: UAC_SESSION_NAME이 있으면 그 이름의 세션을 시작한다.
@@ -187,7 +258,9 @@ export class ContextStore {
   }
 
   async callTool(name, args) {
-    const result = await this.client.callTool({ name, arguments: args });
+    const result = this.backend
+      ? await this.backend.call(name, args)
+      : await this.client.callTool({ name, arguments: args });
 
     if (result?.isError) {
       throw new Error(firstText(result) || `${name} failed`);
@@ -324,7 +397,7 @@ export class ContextStore {
 
   async close() {
     try {
-      await this.client.close();
+      if (this.client) await this.client.close();
     } finally {
       await this.transport.close().catch(() => {});
     }

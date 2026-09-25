@@ -27,6 +27,17 @@ node --no-warnings "$UAC/scripts/maintenance-cleanup.mjs" --data-dir "$DATA" --a
   && echo "cleanup ok: $MAINT/reports/$STAMP-cleanup.md" \
   || echo "cleanup FAILED (exit $?)"
 
+echo "== wal-checkpoint ($STAMP) =="
+# 세션 서버들이 DB를 상시 잡고 있어 WAL이 무한 누적된다 (프레임 수백 개면 open이 느려짐).
+# 주간 TRUNCATE 체크포인트로 wal을 0으로 되돌린다. 실패해도 이후 단계를 막지 않는다.
+if command -v sqlite3 >/dev/null 2>&1 && [ -f "$DATA/context.db" ]; then
+  sqlite3 "$DATA/context.db" "PRAGMA busy_timeout=5000; PRAGMA wal_checkpoint(TRUNCATE);" \
+    | awk -F'|' '{printf "wal checkpoint: busy=%s log_frames=%s merged=%s\n", $1, $2, $3}' \
+    || echo "wal-checkpoint FAILED (exit $?)"
+else
+  echo "wal-checkpoint SKIPPED: sqlite3 또는 $DATA/context.db 없음"
+fi
+
 echo "== note ($STAMP) =="
 # fitness가 실패필 때도 이전 단계 결과는 남으므로, 보고서가 있을 때만 기록한다.
 if [ -s "$MAINT/reports/$STAMP-fitness.md" ]; then

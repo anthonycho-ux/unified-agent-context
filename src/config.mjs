@@ -56,9 +56,26 @@ const CANONICAL_NODE = process.env.UAC_NODE
       ? `${os.homedir()}/.local/share/mise/shims/node`
       : process.execPath);
 
+// .js/.mjs/.cjs entries run under the canonical Node; anything else is a
+// native binary (e.g. store-go/uac-store) spawned directly — no Node needed.
+function isJsEntry(entry) {
+  return /\.(js|mjs|cjs)$/.test(String(entry));
+}
+
+function entrySpec(entry, dataDir) {
+  // 상대 entry는 호출자의 cwd가 아니라 저장소 루트 기준으로 해석한다.
+  // (에이전트가 어느 디렉터리에서 뜨든 같은 스토어를 찾게 하려는 의도된 동작)
+  const expanded = expandHome(entry);
+  const resolved = path.isAbsolute(expanded) ? expanded : path.resolve(repoRoot, expanded);
+  if (isJsEntry(entry)) {
+    return { command: CANONICAL_NODE, args: [resolved], env: { DATA_DIR: dataDir } };
+  }
+  return { command: resolved, args: [], env: { DATA_DIR: dataDir }, binary: true };
+}
+
 function resolveServerSpec() {
   const localEntry = process.env.UAC_SERVER_ENTRY ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
-  const localSpec = { command: CANONICAL_NODE, args: [localEntry], env: { DATA_DIR } };
+  const localSpec = entrySpec(localEntry, DATA_DIR);
 
   if (process.env.UAC_SERVER_ENTRY || process.env.UAC_DATA_DIR || process.env.UAC_REMOTE === '0') {
     return [localSpec];
@@ -76,7 +93,7 @@ function resolveServerSpec() {
     return [localSpec];
   }
 
-  const localStoreSpec = { command: CANONICAL_NODE, args: [store.entry], env: { DATA_DIR: expandHome(store.dataDir) } };
+  const localStoreSpec = entrySpec(store.entry, expandHome(store.dataDir));
 
   // 명시 오버라이드: UAC_STORE_HOST가 있으면 그 호스트만 사용 (폴백 없음).
   const overrideHost = process.env.UAC_STORE_HOST;
@@ -104,19 +121,35 @@ function sshSpec(host, store) {
       '-o', 'BatchMode=yes',
       '-o', 'ConnectTimeout=10',
       host,
-      `DATA_DIR='${expandHome(store.dataDir)}' exec node '${store.entry}'`,
+      isJsEntry(store.entry)
+        ? `DATA_DIR='${expandHome(store.dataDir)}' exec node '${store.entry}'`
+        : `DATA_DIR='${expandHome(store.dataDir)}' exec '${store.entry}'`,
     ],
     env: {},
   };
 }
-export function localSpec({ dataDir = process.env.UAC_LOCAL_DATA_DIR ?? DATA_DIR } = {}) {
-  const localEntry = process.env.UAC_SERVER_ENTRY ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
+// host=local일 때 설정 파일의 store가 이 기기의 정본이므로 local lane도 그걸 쓴다.
+// (remote일 때만 repo data/memory의 별도 로컬 사본이 union 소스가 된다)
+function configuredLocalStore() {
+  let cfg;
+  try {
+    cfg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'uac.config.json'), 'utf8'));
+  } catch {
+    return null;
+  }
+  const store = cfg?.store;
+  if (store?.entry && store?.dataDir && (!store.host || store.host === 'local')) {
+    return { entry: store.entry, dataDir: expandHome(store.dataDir) };
+  }
+  return null;
+}
 
-  return {
-    command: CANONICAL_NODE,
-    args: [localEntry],
-    env: { DATA_DIR: dataDir },
-  };
+export function localSpec({ dataDir = process.env.UAC_LOCAL_DATA_DIR } = {}) {
+  const cfgLocal = configuredLocalStore();
+  const localEntry = process.env.UAC_SERVER_ENTRY
+    ?? cfgLocal?.entry
+    ?? path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
+  return entrySpec(localEntry, dataDir ?? cfgLocal?.dataDir ?? DATA_DIR);
 }
 
 export function sovSpecs() {

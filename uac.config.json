@@ -2,7 +2,8 @@
   "store": {
     "host": "local",
     "fallbackHosts": [],
-    "entry": "./node_modules/mcp-memory-keeper/dist/index.js",
-    "dataDir": "~/.uac/data/memory"
+    "entry": "./store-go/uac-store",
+    "dataDir": "~/.uac/data/memory",
+    "previousEntry": "./node_modules/mcp-memory-keeper/dist/index.js"
   }
 }

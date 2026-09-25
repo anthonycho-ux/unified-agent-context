@@ -13,6 +13,9 @@ process.env.UAC_LOG_PATH = path.join(tmpRoot, 'logs/injector.log');
 process.env.UAC_HEALTH_PATH = path.join(tmpRoot, 'health/injector.json');
 process.env.UAC_METRICS_PATH = path.join(tmpRoot, 'metrics/injector-metrics.json');
 delete process.env.UAC_STRICT;
+// 이 스위트는 항상 알려진 JS 서버를 띄운다 (assertNodeSpec). 설정된 entry가
+// 바이너리여도 테스트는 node 경로를 고정한다 — 롤백 경로의 통합 커버리지이기도 하다.
+process.env.UAC_SERVER_ENTRY ??= path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
 
 const { ContextStore } = await import(pathToFileURL(path.join(srcDir, 'store-adapter.mjs')).href);
 const { makeLocalSpec } = await import(pathToFileURL(path.join(srcDir, 'config.mjs')).href);
@@ -46,14 +49,14 @@ function decision(statement, scope, updatedAt) {
 }
 
 async function withTwoStores(fn) {
-  const dirSov = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-union-store-host-'));
+  const dirSov = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-union-storeHost-'));
   const dirLocal = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-union-local-'));
-  const store-host = await ContextStore.connect(assertNodeSpec(makeLocalSpec(dirSov)));
+  const storeHost = await ContextStore.connect(assertNodeSpec(makeLocalSpec(dirSov)));
   const local = await ContextStore.connect(assertNodeSpec(makeLocalSpec(dirLocal)));
   try {
-    return await fn({ store-host, local });
+    return await fn({ storeHost, local });
   } finally {
-    await store-host.close().catch(() => {});
+    await storeHost.close().catch(() => {});
     await local.close().catch(() => {});
     await fs.rm(dirSov, { recursive: true, force: true });
     await fs.rm(dirLocal, { recursive: true, force: true });
@@ -61,19 +64,19 @@ async function withTwoStores(fn) {
 }
 
 test('union: merges both sources, dedupes by key, newer copy wins', async () => {
-  await withTwoStores(async ({ store-host, local }) => {
-    await store-host.storeFact(decision('store-host only global fact', 'global'));
-    await store-host.storeFact(decision('shared project fact', 'project:x', '2026-01-01T00:00:00.000Z'));
-    await store-host.storeFact(decision('other project fact', 'project:z'));
+  await withTwoStores(async ({ storeHost, local }) => {
+    await storeHost.storeFact(decision('storeHost only global fact', 'global'));
+    await storeHost.storeFact(decision('shared project fact', 'project:x', '2026-01-01T00:00:00.000Z'));
+    await storeHost.storeFact(decision('other project fact', 'project:z'));
     await local.storeFact(decision('local only global fact', 'global'));
     await local.storeFact(decision('shared project fact', 'project:x', '2026-05-01T00:00:00.000Z'));
 
-    const result = await getInjectionBlock({ sovStore: store-host, localStore: local, scope: 'project:x' });
+    const result = await getInjectionBlock({ sovStore: storeHost, localStore: local, scope: 'project:x' });
     assert.equal(result.degraded, false);
     assert.equal(result.partial, false);
 
     const statements = result.facts.map((f) => f.statement).sort();
-    assert.deepEqual(statements, ['local only global fact', 'shared project fact', 'store-host only global fact']);
+    assert.deepEqual(statements, ['local only global fact', 'shared project fact', 'storeHost only global fact']);
 
     // exactly one copy of the shared fact, and it is the newer (local) one.
     const shared = result.facts.filter((f) => f.statement === 'shared project fact');
@@ -84,22 +87,22 @@ test('union: merges both sources, dedupes by key, newer copy wins', async () => 
   });
 });
 
-test('store-host down: falls back to local-only, partial health, not degraded', async () => {
+test('storeHost down: falls back to local-only, partial health, not degraded', async () => {
   await withTwoStores(async ({ local }) => {
-    await local.storeFact(decision('survives store-host outage', 'global'));
+    await local.storeFact(decision('survives storeHost outage', 'global'));
     const result = await getInjectionBlock({ sovStore: throwingStore, localStore: local, scope: 'global' });
     assert.equal(result.degraded, false);
     assert.equal(result.partial, true);
-    assert.deepEqual(result.facts.map((f) => f.statement), ['survives store-host outage']);
+    assert.deepEqual(result.facts.map((f) => f.statement), ['survives storeHost outage']);
     const health = JSON.parse(await fs.readFile(process.env.UAC_HEALTH_PATH, 'utf8'));
     assert.equal(health.status, 'partial');
   });
 });
 
-test('local down: falls back to store-host-only, partial health, not degraded', async () => {
-  await withTwoStores(async ({ store-host }) => {
-    await store-host.storeFact(decision('survives local outage', 'global'));
-    const result = await getInjectionBlock({ sovStore: store-host, localStore: throwingStore, scope: 'global' });
+test('local down: falls back to storeHost-only, partial health, not degraded', async () => {
+  await withTwoStores(async ({ storeHost }) => {
+    await storeHost.storeFact(decision('survives local outage', 'global'));
+    const result = await getInjectionBlock({ sovStore: storeHost, localStore: throwingStore, scope: 'global' });
     assert.equal(result.degraded, false);
     assert.equal(result.partial, true);
     assert.deepEqual(result.facts.map((f) => f.statement), ['survives local outage']);

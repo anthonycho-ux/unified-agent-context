@@ -12,6 +12,9 @@ const scriptsDir = path.join(repoRoot, 'scripts');
 // Librarian side effects must land in an observable temp dir (set before import).
 const librarianDir = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-sync-lib-'));
 process.env.UAC_LIBRARIAN_DIR = librarianDir;
+// 이 스위트는 항상 알려진 JS 서버를 띄운다 (assertNodeSpec). 설정된 entry가
+// 바이너리여도 테스트는 node 경로를 고정한다 — 롤백 경로의 통합 커버리지이기도 하다.
+process.env.UAC_SERVER_ENTRY ??= path.join(repoRoot, 'node_modules', 'mcp-memory-keeper', 'dist', 'index.js');
 
 const { ContextStore } = await import(pathToFileURL(path.join(srcDir, 'store-adapter.mjs')).href);
 const { makeLocalSpec } = await import(pathToFileURL(path.join(srcDir, 'config.mjs')).href);
@@ -33,14 +36,14 @@ test.after(async () => {
 
 async function withStores(fn) {
   const dirLocal = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-sync-local-'));
-  const dirSov = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-sync-store-host-'));
+  const dirSov = await fs.mkdtemp(path.join(os.tmpdir(), 'uac-sync-storeHost-'));
   const local = await ContextStore.connect(assertNodeSpec(makeLocalSpec(dirLocal)));
-  const store-host = await ContextStore.connect(assertNodeSpec(makeLocalSpec(dirSov)));
+  const storeHost = await ContextStore.connect(assertNodeSpec(makeLocalSpec(dirSov)));
   try {
-    return await fn({ local, store-host });
+    return await fn({ local, storeHost });
   } finally {
     await local.close().catch(() => {});
-    await store-host.close().catch(() => {});
+    await storeHost.close().catch(() => {});
     await fs.rm(dirLocal, { recursive: true, force: true });
     await fs.rm(dirSov, { recursive: true, force: true });
   }
@@ -56,21 +59,21 @@ function decision(statement, scope, updatedAt) {
   });
 }
 
-test('push-only: a fact present only locally is lifted to store-host', async () => {
-  await withStores(async ({ local, store-host }) => {
-    await local.storeFact(decision('push me to store-host', 'global'));
-    const report = await reconcile({ localStore: local, sovStore: store-host });
+test('push-only: a fact present only locally is lifted to storeHost', async () => {
+  await withStores(async ({ local, storeHost }) => {
+    await local.storeFact(decision('push me to storeHost', 'global'));
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(report.pushed, 1);
     assert.equal(report.pulled, 0);
     assert.equal(report.failed, 0);
-    assert.deepEqual((await store-host.getFacts({ scope: 'global' })).map((f) => f.statement), ['push me to store-host']);
+    assert.deepEqual((await storeHost.getFacts({ scope: 'global' })).map((f) => f.statement), ['push me to storeHost']);
   });
 });
 
-test('pull-only: a fact present only on store-host is replicated to local', async () => {
-  await withStores(async ({ local, store-host }) => {
-    await store-host.storeFact(decision('pull me to local', 'project:x'));
-    const report = await reconcile({ localStore: local, sovStore: store-host });
+test('pull-only: a fact present only on storeHost is replicated to local', async () => {
+  await withStores(async ({ local, storeHost }) => {
+    await storeHost.storeFact(decision('pull me to local', 'project:x'));
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(report.pulled, 1);
     assert.equal(report.pushed, 0);
     assert.deepEqual((await local.getFacts({ scope: 'project:x' })).map((f) => f.statement), ['pull me to local']);
@@ -78,38 +81,38 @@ test('pull-only: a fact present only on store-host is replicated to local', asyn
 });
 
 test('newest-wins in each direction: strictly newer updated_at propagates', async () => {
-  await withStores(async ({ local, store-host }) => {
+  await withStores(async ({ local, storeHost }) => {
     const key = 'same logical decision';
-    await store-host.storeFact(decision(key, 'global', '2026-01-01T00:00:00.000Z'));
+    await storeHost.storeFact(decision(key, 'global', '2026-01-01T00:00:00.000Z'));
     await local.storeFact(decision(key, 'global', '2026-02-01T00:00:00.000Z'));
-    const report = await reconcile({ localStore: local, sovStore: store-host });
-    // local copy is newer -> pushed to store-host; store-host's older copy is not pulled back.
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
+    // local copy is newer -> pushed to storeHost; storeHost's older copy is not pulled back.
     assert.equal(report.pushed, 1);
     assert.equal(report.pulled, 0);
-    const sovFacts = await store-host.getFacts({ scope: 'global' });
+    const sovFacts = await storeHost.getFacts({ scope: 'global' });
     assert.equal(sovFacts.length, 1);
     assert.equal(sovFacts[0].updated_at, '2026-02-01T00:00:00.000Z');
   });
 });
 
 test('equal-time is a no-op (no write trigger, no oscillation)', async () => {
-  await withStores(async ({ local, store-host }) => {
+  await withStores(async ({ local, storeHost }) => {
     const fact = decision('identical on both sides', 'global', '2026-03-03T00:00:00.000Z');
     await local.storeFact(fact);
-    await store-host.storeFact(fact);
-    const report = await reconcile({ localStore: local, sovStore: store-host });
+    await storeHost.storeFact(fact);
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(report.pushed, 0);
     assert.equal(report.pulled, 0);
   });
 });
 
 test('idempotency: a second reconcile pass transfers nothing', async () => {
-  await withStores(async ({ local, store-host }) => {
+  await withStores(async ({ local, storeHost }) => {
     await local.storeFact(decision('local one', 'global'));
-    await store-host.storeFact(decision('store-host one', 'project:y'));
-    const first = await reconcile({ localStore: local, sovStore: store-host });
+    await storeHost.storeFact(decision('storeHost one', 'project:y'));
+    const first = await reconcile({ localStore: local, sovStore: storeHost });
     assert.ok(first.pushed + first.pulled >= 2);
-    const second = await reconcile({ localStore: local, sovStore: store-host });
+    const second = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(second.pushed, 0);
     assert.equal(second.pulled, 0);
     assert.equal(second.failed, 0);
@@ -117,22 +120,22 @@ test('idempotency: a second reconcile pass transfers nothing', async () => {
 });
 
 test('category filter: non-fact rows are never propagated', async () => {
-  await withStores(async ({ local, store-host }) => {
+  await withStores(async ({ local, storeHost }) => {
     await local.callTool('context_save', {
       key: 'note-1',
       value: JSON.stringify({ arbitrary: 'note payload' }),
       category: 'note',
       channel: 'global',
     });
-    const report = await reconcile({ localStore: local, sovStore: store-host });
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(report.pushed, 0);
     assert.equal(report.failed, 0);
-    assert.equal((await store-host.getRawItems({ scope: 'global' })).length, 0);
+    assert.equal((await storeHost.getRawItems({ scope: 'global' })).length, 0);
   });
 });
 
 test('poison row is skipped but the rest of the cycle completes', async () => {
-  await withStores(async ({ local, store-host }) => {
+  await withStores(async ({ local, storeHost }) => {
     const good = decision('valid decision alongside poison', 'global');
     await local.storeFact(good);
     // A fact-category row whose value is a fact-shaped object with NO statement
@@ -143,15 +146,15 @@ test('poison row is skipped but the rest of the cycle completes', async () => {
       category: 'decision',
       channel: 'global',
     });
-    const report = await reconcile({ localStore: local, sovStore: store-host });
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
     assert.ok(report.skipped >= 1, 'poison row must be counted as skipped');
     assert.equal(report.failed, 0);
-    assert.deepEqual((await store-host.getFacts({ scope: 'global' })).map((f) => f.statement), [good.statement]);
+    assert.deepEqual((await storeHost.getFacts({ scope: 'global' })).map((f) => f.statement), [good.statement]);
   });
 });
 
 test('replication uses saveFactValidated and never queues the librarian', async () => {
-  await withStores(async ({ local, store-host }) => {
+  await withStores(async ({ local, storeHost }) => {
     // The librarian outbox is shared across this file, so measure the DELTA, not absence.
     const outbox = path.join(librarianDir, 'outbox.jsonl');
     const countLines = async () => {
@@ -161,19 +164,19 @@ test('replication uses saveFactValidated and never queues the librarian', async 
         return 0;
       }
     };
-    // Seed store-host WITHOUT the librarian side effect, then reconcile (pull) into local.
-    await store-host.saveFactValidated(decision('replicated without publish', 'global'));
+    // Seed storeHost WITHOUT the librarian side effect, then reconcile (pull) into local.
+    await storeHost.saveFactValidated(decision('replicated without publish', 'global'));
     const before = await countLines();
-    const report = await reconcile({ localStore: local, sovStore: store-host });
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(report.pulled, 1);
     assert.equal(await countLines(), before, 'reconcile pull must not append to the librarian outbox');
 
     // Sanity check the observation: storeFact (the genuine-write path) DOES queue.
-    await store-host.storeFact(decision('genuine write publishes', 'global'));
+    await storeHost.storeFact(decision('genuine write publishes', 'global'));
     assert.ok((await countLines()) > before, 'storeFact should append to the librarian outbox');
   });
 });
-// --- Option A: local→store-host normalization of Claude Desktop-style raw rows ---
+// --- Option A: local→storeHost normalization of Claude Desktop-style raw rows ---
 
 // A Claude Desktop `context_save` row: fact intent, human-readable key that does
 // NOT match the recomputed dedupe_key, and missing every canonical field
@@ -234,15 +237,15 @@ test('normalization (unit): a secret in the statement is fail-closed skipped', (
   assert.deepEqual(result, { skip: true });
 });
 
-test('normalization (e2e): a Claude Desktop-style row is normalized and pushed to store-host', async () => {
-  await withStores(async ({ local, store-host }) => {
+test('normalization (e2e): a Claude Desktop-style row is normalized and pushed to storeHost', async () => {
+  await withStores(async ({ local, storeHost }) => {
     const statement = 'User approved Option A for reconcile normalization';
     await plantClaudeDesktopRow(local, { key: 'user_option_a_20260712', statement });
-    const report = await reconcile({ localStore: local, sovStore: store-host });
-    assert.equal(report.pushed, 1, 'the normalized fact must be pushed to store-host');
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
+    assert.equal(report.pushed, 1, 'the normalized fact must be pushed to storeHost');
     assert.equal(report.failed, 0);
 
-    const sovFacts = await store-host.getFacts({ scope: 'global' });
+    const sovFacts = await storeHost.getFacts({ scope: 'global' });
     assert.equal(sovFacts.length, 1);
     const fact = sovFacts[0];
     assert.equal(fact.statement, statement);
@@ -254,18 +257,18 @@ test('normalization (e2e): a Claude Desktop-style row is normalized and pushed t
     assert.ok(!Number.isNaN(Date.parse(fact.created_at)));
     assert.ok(!Number.isNaN(Date.parse(fact.updated_at)));
 
-    // The store-host row's key IS the recomputed dedupe_key (key === dedupe_key on the wire).
-    const sovRaw = await store-host.getRawItems({ scope: 'global' });
+    // The storeHost row's key IS the recomputed dedupe_key (key === dedupe_key on the wire).
+    const sovRaw = await storeHost.getRawItems({ scope: 'global' });
     assert.deepEqual(sovRaw.map((r) => r.key), [dedupeKey(statement, 'global')]);
   });
 });
 
 test('normalization (e2e): re-running reconcile is idempotent (no oscillation)', async () => {
-  await withStores(async ({ local, store-host }) => {
+  await withStores(async ({ local, storeHost }) => {
     await plantClaudeDesktopRow(local, { key: 'idem_key', statement: 'normalized facts converge' });
-    const first = await reconcile({ localStore: local, sovStore: store-host });
+    const first = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(first.pushed, 1);
-    const second = await reconcile({ localStore: local, sovStore: store-host });
+    const second = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(second.pushed, 0, 'a normalized fact must not be re-pushed');
     assert.equal(second.pulled, 0, 'and must not be pulled back to local');
     assert.equal(second.failed, 0);
@@ -273,9 +276,9 @@ test('normalization (e2e): re-running reconcile is idempotent (no oscillation)',
 });
 
 test('normalization (unit): a plain-text fact-category row uses the raw value as its statement', () => {
-  const value = 'Decision: enable avahi-daemon on store-host so LAN ssh works without Tailscale.';
+  const value = 'Decision: enable avahi-daemon on storeHost so LAN ssh works without Tailscale.';
   const result = normalizeRawRow(
-    { key: 'store-host-lan-2026-07-12', value, category: 'decision', channel: 'global', created_at: '2026-07-12 19:50:33' },
+    { key: 'storeHost-lan-2026-07-12', value, category: 'decision', channel: 'global', created_at: '2026-07-12 19:50:33' },
     'global',
   );
   assert.ok(result?.fact, 'plain-text decision row must normalize');
@@ -294,19 +297,19 @@ test('normalization (unit): a plain-text NON-fact-category row is still filtered
   );
 });
 
-test('normalization (e2e): a plain-text decision row is normalized and pushed to store-host', async () => {
-  await withStores(async ({ local, store-host }) => {
-    const statement = 'Route `ssh store-host` over LAN first, Tailscale as fallback (verified 2026-07-11).';
+test('normalization (e2e): a plain-text decision row is normalized and pushed to storeHost', async () => {
+  await withStores(async ({ local, storeHost }) => {
+    const statement = 'Route `ssh storeHost` over LAN first, Tailscale as fallback (verified 2026-07-11).';
     await local.callTool('context_save', {
       key: 'ssh_sov_auto_route_20260712',
       value: statement, // bare string, exactly how the real stuck rows were saved
       category: 'decision',
       channel: 'project:example-project',
     });
-    const report = await reconcile({ localStore: local, sovStore: store-host });
+    const report = await reconcile({ localStore: local, sovStore: storeHost });
     assert.equal(report.pushed, 1);
     assert.equal(report.failed, 0);
-    const facts = await store-host.getFacts({ scope: 'project:example-project' });
+    const facts = await storeHost.getFacts({ scope: 'project:example-project' });
     assert.equal(facts.length, 1);
     assert.equal(facts[0].statement, statement);
     assert.equal(facts[0].dedupe_key, dedupeKey(statement, 'project:example-project'));

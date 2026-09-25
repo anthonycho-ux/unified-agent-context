@@ -224,10 +224,10 @@ export async function reconcile({ localStore, sovStore, now = () => new Date() }
     // canonicalized on the way up. Sov (the canonical store) stays strict so a
     // malformed row there is never silently "healed" back into local.
     const local = await collectFacts(localStore, scope, normalizeRawRow);
-    const store-host = await collectFacts(sovStore, scope, validateRawRow);
-    skipped += local.skipped + store-host.skipped;
+    const sov = await collectFacts(sovStore, scope, validateRawRow);
+    skipped += local.skipped + sov.skipped;
 
-    const { toSov, toLocal } = diffForReconcile(local.facts, store-host.facts);
+    const { toSov, toLocal } = diffForReconcile(local.facts, sov.facts);
 
     for (const fact of toSov) {
       try {

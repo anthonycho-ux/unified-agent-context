@@ -25,3 +25,4 @@ docs/private/agent-routine.md
 artifacts/tableau-votd/
 
 .commandcode/
+store-go/uac-store
