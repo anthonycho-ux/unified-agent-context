@@ -49,12 +49,18 @@ Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canon
 | `docs/phase6-remote.md` | 主存储搬到 store-host，以及 ssh 访问。 |
 | `docs/onboarding.md` | 新智能体五分钟加入的方法。 |
 | `docs/handoff-tailscale-connectivity.md` | 存储连接不稳时怎么办。 |
+| `docs/threejs/index.md` | Three.js 智能体知识库中心：核心架构、API 速查、着色器、坑点、实战示例。 |
+| `docs/basecamp/basecamp-ops.md` | Basecamp 5 舰队运维：CLI、认证的怪癖、账号 <basecamp-account-id>（2026-08-26 配置笔记）。 |
+| `docs/basecamp/cli-reference.md` | Basecamp 5 CLI 已验证参考 v0.9.1：安装、认证、全部工具组、错误码、实测更正。 |
 
 ## 命令
 
 ```sh
 node scripts/inject-context.mjs [--cwd <dir>]        # 输出共享上下文块
 node scripts/record-fact.mjs --type decision "..."   # 显式记录（含密钥时以 exit 3 拒绝）
+                                                     # v2.1: --author <agent>，近似去重闸门把
+                                                     # 重复保留为 DUPLICATE，更正则给前一条
+                                                     # 立 tombstone (superseded_by)
 node scripts/distill-session.mjs --file <transcript> # 会话蒸馏 + 隔离清扫
 node scripts/librarian-sync.mjs [--strict]           # outbox → store-host 图书管理员 inbox 投递 (Phase 5)
 node scripts/doctor.mjs                              # 接线自检

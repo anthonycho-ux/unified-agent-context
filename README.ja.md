@@ -52,12 +52,18 @@ Agents ──(MCP stdio, over ssh when remote)──► mcp-memory-keeper (canon
 | `docs/phase6-remote.md` | 正本ストアの store-host 移行と ssh アクセス。 |
 | `docs/onboarding.md` | 新しいエージェントが五分で参加する方法。 |
 | `docs/handoff-tailscale-connectivity.md` | ストア接続が不安定なときの対処。 |
+| `docs/threejs/index.md` | Three.js エージェント知識ベースのハブ: コアアーキテクチャ、API チートシート、シェーダー、落とし穴、実例。 |
+| `docs/basecamp/basecamp-ops.md` | Basecamp 5 フリート運用: CLI、認証の癖、アカウント <basecamp-account-id> (2026-08-26 セットアップメモ)。 |
+| `docs/basecamp/cli-reference.md` | Basecamp 5 CLI 検証済みリファレンス v0.9.1: インストール、認証、全ツール群、エラーコード、実測での訂正。 |
 
 ## コマンド
 
 ```sh
 node scripts/inject-context.mjs [--cwd <dir>]        # 共有コンテキストブロックを出力
 node scripts/record-fact.mjs --type decision "..."   # 明示的記録（秘密情報は exit 3 で遮断）
+                                                     # v2.1: --author <agent>, 近似重複ゲートが
+                                                     # 重複を DUPLICATE のまま残し、訂正は
+                                                     # 前身に tombstone を立てる (superseded_by)
 node scripts/distill-session.mjs --file <transcript> # セッション蒸留 + 検疫スイープ
 node scripts/librarian-sync.mjs [--strict]           # outbox → store-host ライブラリアン inbox 配送 (Phase 5)
 node scripts/doctor.mjs                              # 配線セルフチェック

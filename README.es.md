@@ -52,12 +52,18 @@ En palabras simples.
 | `docs/phase6-remote.md` | La mudanza del almacén principal a store-host, y el acceso por ssh. |
 | `docs/onboarding.md` | Cómo un agente nuevo se une en cinco minutos. |
 | `docs/handoff-tailscale-connectivity.md` | Qué hacer cuando la conexión al almacén falla. |
+| `docs/threejs/index.md` | Centro de conocimiento de Three.js para agentes: arquitectura central, chuleta de API, shaders, trampas, ejemplo práctico. |
+| `docs/basecamp/basecamp-ops.md` | Operaciones de la flota Basecamp 5: CLI, peculiaridades de auth, cuenta <basecamp-account-id> (notas de configuración del 2026-08-26). |
+| `docs/basecamp/cli-reference.md` | Referencia verificada del CLI de Basecamp 5 v0.9.1: instalación, auth, cada grupo de herramientas, códigos de error, correcciones en vivo. |
 
 ## Los comandos
 
 ```sh
 node scripts/inject-context.mjs [--cwd <dir>]        # imprime el bloque de contexto compartido
 node scripts/record-fact.mjs --type decision "..."   # registro explícito (secretos bloqueados con exit 3)
+                                                     # v2.1: --author <agent>, la puerta anti-duplicados
+                                                     # guarda los casi-repetidos como DUPLICATE y las
+                                                     # correcciones dejan lápida al predecesor (superseded_by)
 node scripts/distill-session.mjs --file <transcript> # destila una sesión + barrido de cuarentena
 node scripts/librarian-sync.mjs [--strict]           # entrega outbox → inbox del bibliotecario en store-host (Phase 5)
 node scripts/doctor.mjs                              # autocomprobación del cableado

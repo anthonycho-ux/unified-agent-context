@@ -51,12 +51,18 @@ UAC 는 실패한 것이다.
 | `docs/phase6-remote.md` | 정본 저장소의 store-host 이전, 그리고 ssh 접근. |
 | `docs/onboarding.md` | 새 에이전트가 5분 안에 합류하는 법. |
 | `docs/handoff-tailscale-connectivity.md` | 저장소 연결이 끊길 때 대처법. |
+| `docs/threejs/index.md` | Three.js 에이전트 지식 허브: 핵심 아키텍처, API 치트시트, 셰이더, 함정, 실전 예제. |
+| `docs/basecamp/basecamp-ops.md` | Basecamp 5 플릿 운영: CLI, 인증 특이사항, 계정 <basecamp-account-id> (2026-08-26 세팅 노트). |
+| `docs/basecamp/cli-reference.md` | Basecamp 5 CLI 검증 레퍼런스 v0.9.1: 설치, 인증, 모든 도구 그룹, 오류 코드, 실측 수정사항. |
 
 ## 커맨드
 
 ```sh
 node scripts/inject-context.mjs [--cwd <dir>]        # 공유 컨텍스트 블록 출력
 node scripts/record-fact.mjs --type decision "..."   # 명시 기록 (비밀은 exit 3 차단)
+                                                     # v2.1: --author <agent>, near-dup 게이트가
+                                                     # 겹침 후보를 DUPLICATE로 남기고, 수정은
+                                                     # 이전 팩트에 tombstone을 세움 (superseded_by)
 node scripts/distill-session.mjs --file <transcript> # 세션 증류 + 검역 스윕
 node scripts/librarian-sync.mjs [--strict]           # outbox → store-host 사서 inbox 배달 (Phase 5)
 node scripts/doctor.mjs                              # 배선 자가진단
