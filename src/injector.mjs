@@ -71,6 +71,10 @@ function renderBlock(projectScope, globalFacts, projectFacts) {
   const lines = ['## 공유 컨텍스트 (unified-agent-context)', ''];
   if (globalFacts.length === 0 && projectFacts.length === 0) {
     lines.push('_아직 공유된 사실이 없습니다. 중요한 결정/선호는 공유 메모리에 기록하세요._');
+    lines.push('');
+    lines.push(
+      '_REGISTRY CHECK: before does-X-exist/where-is-X retrieval, run `registry-check <type>` (types: skills, memory, workspace, browser, fleet, services, models). Sources map: ~/.agents/SOURCES.md. Never conclude absence from the local corpus alone._',
+    );
     return lines.join('\n');
   }
 
@@ -104,6 +108,10 @@ function renderBlock(projectScope, globalFacts, projectFacts) {
       `_예산 초과/미승격으로 ${omittedTotal}건 생략됨. 필요 시 context_search로 조회._`,
     );
   }
+  lines.push('');
+  lines.push(
+    '_REGISTRY CHECK: before does-X-exist/where-is-X retrieval, run `registry-check <type>` (types: skills, memory, workspace, browser, fleet, services, models). Sources map: ~/.agents/SOURCES.md. Never conclude absence from the local corpus alone._',
+  );
   return lines.join('\n').trimEnd();
 }
 
