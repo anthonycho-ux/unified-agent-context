@@ -1,0 +1,11 @@
+# Room-change detection (agent_context.detect)
+# Linux / CPU-only box:
+#   uv venv .venv-vlm --python 3.11
+#   uv pip install --python .venv-vlm/bin/python -r requirements-vlm.txt
+#
+# macOS / Apple Silicon adds the MLX runtime:
+#   uv pip install --python .venv-vlm/bin/python -r requirements-vlm.txt -r requirements-mlx.txt
+
+opencv-python-headless>=4.10
+numpy>=1.26
+requests>=2.31

@@ -1,0 +1,3 @@
+# MLX runtime — Apple Silicon only (MacBook Air).
+# Weights are 4-bit from the mlx-community org; they stay resident in unified memory.
+mlx-vlm>=0.1.12
