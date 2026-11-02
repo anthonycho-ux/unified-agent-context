@@ -25,6 +25,7 @@ docs/private/agent-routine.md
 artifacts/tableau-votd/
 
 .commandcode/
+.devin/
 store-go/uac-store
 
 # secrets — never commit real env files
